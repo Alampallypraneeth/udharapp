@@ -80,7 +80,7 @@ const CustomersPage = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', email: '', address: '', avatar: customerPresets[0].value });
   const [submitting, setSubmitting] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState({});
+
   const fileInputRef = useRef(null);
 
   // Quick transaction state
@@ -195,25 +195,7 @@ const CustomersPage = () => {
     } catch (err) { toast.error('Delete failed'); }
   };
 
-  const handleEmailRemind = async (e, customer) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!customer.email) {
-      toast.warning('Please edit this customer and add an email address first.');
-      return;
-    }
-    
-    setSendingEmail(prev => ({ ...prev, [customer._id]: true }));
-    try {
-      const { data } = await API.post(`/reminders/send/${customer._id}`);
-      toast.success(data.message || `Email Reminder sent to ${customer.name}!`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send Email reminder');
-    } finally {
-      setSendingEmail(prev => ({ ...prev, [customer._id]: false }));
-    }
-  };
+
 
   if (loading) return <><Header title={t('customers')} subtitle={t('manageCustomers')} /><Loader fullPage /></>;
 
@@ -393,21 +375,7 @@ const CustomersPage = () => {
                       >
                         <HiOutlineArrowDown size={11} /> You Got
                       </button>
-                      {c.balance > 0 && (
-                        <button 
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-orange hover:bg-orange-hover text-pure-white text-[10px] font-bold rounded-lg border-none cursor-pointer transition-colors shadow-sm" 
-                          title="Send Email Reminder" 
-                          onClick={(e) => handleEmailRemind(e, c)}
-                          disabled={sendingEmail[c._id]}
-                        >
-                          {sendingEmail[c._id] ? (
-                            <span className="w-3 h-3 border-2 border-pure-white border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <HiOutlineMail size={11} />
-                          )}
-                          Email
-                        </button>
-                      )}
+
                       <button 
                         className="p-1.5 text-slate-gray hover:text-red-give hover:bg-red-give/10 rounded-lg cursor-pointer flex items-center justify-center border-none bg-transparent transition-colors" 
                         onClick={() => setDeleteId(c._id)} 

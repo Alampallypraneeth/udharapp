@@ -121,7 +121,7 @@ const CustomerDetailPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTxn, setEditingTxn] = useState(null);
   const [editForm, setEditForm] = useState({ amount: '', description: '', date: '', paymentStatus: 'PENDING', paymentMode: '' });
@@ -358,23 +358,7 @@ const CustomerDetailPage = () => {
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to decline payment'); }
   };
 
-  const handleEmailReminder = async () => {
-    if (!customer) return;
-    if (!customer.email) {
-      toast.warning('Please add an email address to this customer first.');
-      return;
-    }
-    
-    setSendingEmail(true);
-    try {
-      const { data } = await API.post(`/reminders/send/${customer._id}`);
-      toast.success(data.message || `Email Reminder sent to ${customer.name}!`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send Email reminder');
-    } finally {
-      setSendingEmail(false);
-    }
-  };
+
 
   const handleDownloadPDF = async () => {
     try {
@@ -551,20 +535,7 @@ const CustomerDetailPage = () => {
             </div>
           </div>
           <div className="flex flex-col gap-2 pt-3 border-t border-soft-gray/50">
-            {customer.balance > 0 && (
-              <button 
-                className="w-full py-2.5 bg-orange hover:bg-orange-hover text-pure-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 border-none cursor-pointer shadow-sm" 
-                onClick={handleEmailReminder} 
-                disabled={sendingEmail}
-              >
-                {sendingEmail ? (
-                  <span className="w-3.5 h-3.5 border-2 border-pure-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <HiOutlineMail size={14} />
-                )}
-                Send Email Reminder
-              </button>
-            )}
+
             <div className="flex gap-2 w-full">
               <button className="flex-1 py-2.5 bg-transparent hover:bg-slate-gray/5 text-slate-gray border border-soft-gray font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={handleViewPDF}>
                 View Statement

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const { sendReminder, sendBulkReminders, sendFast2SMSSMS, sendCloudWhatsApp } = require('../controllers/reminderController');
+const { sendFast2SMSSMS, sendCloudWhatsApp } = require('../controllers/reminderController');
 const { protect } = require('../middleware/authMiddleware');
 const Customer = require('../models/Customer');
 const Transaction = require('../models/Transaction');
@@ -489,8 +489,6 @@ router.post('/webhook/cashfree', async (req, res) => {
 router.use(protect);
 
 // Reminders
-router.post('/send/:customerId', sendReminder);
-router.post('/send-bulk', sendBulkReminders);
 router.post('/send-sms', sendFast2SMSSMS);
 router.post('/send-whatsapp', sendCloudWhatsApp);
 

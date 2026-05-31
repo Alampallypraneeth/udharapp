@@ -90,7 +90,7 @@ const DashboardPage = () => {
   const [showTxnModal, setShowTxnModal] = useState(false);
   const [txnForm, setTxnForm] = useState({ customer: '', type: 'credit', amount: '', description: '', date: new Date().toISOString().split('T')[0], paymentMode: 'cash' });
   const [submitting, setSubmitting] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState({});
+
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [custFilter, setCustFilter] = useState('all');
   const [custSearch, setCustSearch] = useState('');
@@ -166,25 +166,7 @@ const DashboardPage = () => {
 
   const [sidebarOpen, setSidebarOpen] = useOutletContext() || [false, () => {}];
 
-  const handleEmailRemind = async (e, customer) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!customer.email) {
-      toast.warning('Please edit this customer and add an email address first.');
-      return;
-    }
-    
-    setSendingEmail(prev => ({ ...prev, [customer._id]: true }));
-    try {
-      const { data } = await API.post(`/reminders/send/${customer._id}`);
-      toast.success(data.message || `Email Reminder sent to ${customer.name}!`);
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to send Email reminder');
-    } finally {
-      setSendingEmail(prev => ({ ...prev, [customer._id]: false }));
-    }
-  };
+
 
   const fetchAll = async () => {
     try {
