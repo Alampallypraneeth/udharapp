@@ -6,7 +6,7 @@ A premium, state-of-the-art digital credit ledger application designed specifica
 
 ## 🏗️ Monorepo Directory Architecture
 
-The project is cleanly decoupled into two dedicated sub-folders to facilitate simple separate production deployments:
+The project is cleanly decoupled into two dedicated sub-folders to facilitate simple separate production deployments (Git updated).
 
 ```text
 digital-udhaar-app/
