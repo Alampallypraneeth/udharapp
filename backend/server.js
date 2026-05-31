@@ -8,8 +8,10 @@ const { initAutoReminderScheduler } = require('./services/autoReminderService');
 // Load env vars (triggered reload for USE_MOCK env vars)
 dotenv.config();
 
-// Disable SSL certificate verification rejection for local development
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// Disable SSL certificate verification rejection ONLY for local development environments
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
 
 // Connect to database
 connectDB();
