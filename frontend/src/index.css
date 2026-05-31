@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  --bg-main: #F9FAFB;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+  --bg-header: rgba(249, 250, 251, 0.8);
+  --border-main: #E5E7EB;
+  --text-main: #111827;
+  --text-muted: #6B7280;
+  --bg-input: #FFFFFF;
+  --bg-soft-white: #FFFFFF;
+  --bg-light-cream: #F3F4F6;
+  --bg-pure-white: #FFFFFF;
+  --color-glass: rgba(255, 255, 255, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.02);
+  
+  /* Monochromatic primary color tokens - Light Mode */
+  --color-primary: #111827; /* slate-900 */
+  --color-primary-hover: #1F2937; /* slate-800 */
+}
+
+.dark {
+  --bg-main: #0A0B0D;
+  --bg-card: #121316;
+  --bg-sidebar: #0E0F12;
+  --bg-header: rgba(10, 11, 13, 0.8);
+  --border-main: #1E2025;
+  --text-main: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --bg-input: #121316;
+  --bg-soft-white: #121316;
+  --bg-light-cream: #1C1D21;
+  --bg-pure-white: #1E2025;
+  --color-glass: rgba(18, 19, 22, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  
+  /* Monochromatic primary color tokens - Dark Mode */
+  --color-primary: #F9FAFB; /* slate-50 */
+  --color-primary-hover: #E5E7EB; /* slate-200 */
+}
+
+@theme {
+  --color-soft-white: var(--bg-soft-white);
+  --color-light-cream: var(--bg-light-cream);
+  --color-orange: var(--color-primary);
+  --color-orange-hover: var(--color-primary-hover);
+  --color-deep-navy: var(--text-main);
+  --color-slate-gray: var(--text-muted);
+  --color-soft-gray: var(--border-main);
+  --color-pure-white: var(--bg-pure-white);
+  
+  --color-premium-dark: #0A0B0D;
+  
+  --color-green-get: #10B981;
+  --color-red-give: #EF4444;
+  --color-warning-pending: #F59E0B;
+  --color-info-analytics: #6366F1;
+  
+  --color-orange-hover: var(--color-primary-hover);
+  --color-green-hover: #059669;
+  --color-red-hover: #DC2626;
+}
+
+body {
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+/* Custom ultra-minimal scrollbars for modern web experience */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Focus and input styling details */
+input, select, textarea {
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px var(--border-main) !important;
+}
+
+/* Smooth Transition class for premium theme toggle */
+body, header, aside, tr, td, th, input, select, textarea, button, 
+.bg-pure-white, .bg-soft-white, .bg-light-cream, .border-soft-gray, .text-deep-navy, .text-slate-gray {
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Sleek minimalist container details */
+.minimal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
