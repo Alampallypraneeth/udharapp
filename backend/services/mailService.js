@@ -34,7 +34,8 @@ const sendEmail = async ({ to, subject, text, html, attachments }) => {
     connectionTimeout: 10000,  // 10s — fail fast if SMTP server unreachable
     greetingTimeout: 10000,    // 10s — fail fast if no greeting received
     socketTimeout: 15000,      // 15s — fail fast on socket inactivity
-    tls: { rejectUnauthorized: false }
+    tls: { rejectUnauthorized: false },
+    family: 4                  // Force IPv4 to prevent ENETUNREACH on IPv6-unsupported networks (like Render)
   });
 
   const fromEmail = process.env.SMTP_FROM || user;
