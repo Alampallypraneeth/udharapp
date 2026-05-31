@@ -49,10 +49,12 @@ const LoginPage = () => {
         
         <form className="space-y-5" onSubmit={handleSubmit}>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="email" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Email Address
             </label>
             <input 
+              id="email"
+              name="email"
               className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all"
               type="email" 
               placeholder="you@example.com" 
@@ -62,11 +64,13 @@ const LoginPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="password" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Password
             </label>
             <div className="relative">
               <input 
+                id="password"
+                name="password"
                 className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all pr-12"
                 type={showPassword ? 'text' : 'password'} 
                 placeholder="••••••••" 

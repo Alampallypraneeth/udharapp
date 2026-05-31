@@ -203,10 +203,12 @@ const RegisterPage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="name" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Your Name
             </label>
             <input 
+              id="name"
+              name="name"
               className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all"
               placeholder="Rajesh Kumar" 
               required 
@@ -215,10 +217,12 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="storeName" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Store Name
             </label>
             <input 
+              id="storeName"
+              name="storeName"
               className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all"
               placeholder="Kumar General Store" 
               required 
@@ -227,10 +231,12 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="email" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Email Address
             </label>
             <input 
+              id="email"
+              name="email"
               className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all"
               type="email" 
               placeholder="you@example.com" 
@@ -240,10 +246,12 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="phone" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Phone Number
             </label>
             <input 
+              id="phone"
+              name="phone"
               className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all"
               placeholder="+91 9876543210" 
               value={form.phone} 
@@ -251,11 +259,13 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
+            <label htmlFor="password" className="block text-xs font-semibold text-slate-gray uppercase tracking-wider mb-2">
               Password
             </label>
             <div className="relative">
               <input 
+                id="password"
+                name="password"
                 className="w-full px-4 py-3 bg-light-cream/40 border border-soft-gray rounded-lg text-deep-navy placeholder-slate-gray/40 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 outline-none transition-all pr-12"
                 type={showPassword ? 'text' : 'password'} 
                 placeholder="Min 6 characters" 
