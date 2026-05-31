@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://digital-udhaar-backend.onrender.com/api/:path*"
+      "destination": "https://udharapp-1.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
