@@ -6,7 +6,7 @@
       "destination": "https://udharapp-1.onrender.com/api/:path*"
     },
     {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
