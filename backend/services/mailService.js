@@ -25,15 +25,16 @@ const sendEmail = async ({ to, subject, text, html, attachments }) => {
     };
   }
 
-  // Create transporter
+  // Create transporter with fast-fail timeouts (prevents 2-min hangs on blocked IPs)
   const transporter = nodemailer.createTransport({
     host,
-    port,
-    secure: port === 465, // true for 465, false for other ports
-    auth: {
-      user,
-      pass,
-    },
+    port: Number(port),
+    secure: Number(port) === 465,
+    auth: { user, pass },
+    connectionTimeout: 10000,  // 10s — fail fast if SMTP server unreachable
+    greetingTimeout: 10000,    // 10s — fail fast if no greeting received
+    socketTimeout: 15000,      // 15s — fail fast on socket inactivity
+    tls: { rejectUnauthorized: false }
   });
 
   const fromEmail = process.env.SMTP_FROM || user;
