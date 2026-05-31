@@ -9,7 +9,7 @@ const getBackendUrl = () => {
   }
   return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:4000'
-    : window.location.origin;
+    : 'https://udharapp-1.onrender.com';
 };
 
 const backendUrl = getBackendUrl();
