@@ -243,7 +243,7 @@ const CustomersPage = () => {
             <HiOutlineDownload size={16} className="text-emerald-600" /> Export CSV
           </button>
           <button 
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-hover text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-sm hover:shadow" 
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
             onClick={() => setShowForm(true)}
           >
             <HiOutlinePlus size={16} /> {t('addCustomer')}
@@ -257,7 +257,7 @@ const CustomersPage = () => {
             <h3 className="text-lg font-bold text-deep-navy mb-0">No customer found matching "{search}"</h3>
             <p className="text-sm text-slate-gray mt-0">Would you like to add them to your ledger?</p>
             <button 
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-hover text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-sm hover:shadow" 
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
               onClick={() => {
                 setForm(prev => ({ ...prev, name: search }));
                 setShowForm(true);
@@ -271,7 +271,7 @@ const CustomersPage = () => {
             <h3 className="text-lg font-bold text-deep-navy mb-0">{t('noCustomers')}</h3>
             <p className="text-sm text-slate-gray mt-0">{t('addFirstCustomer')}</p>
             <button 
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-hover text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-sm hover:shadow" 
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
               onClick={() => setShowForm(true)}
             >
               <HiOutlinePlus size={16} /> {t('addCustomer')}
@@ -300,10 +300,10 @@ const CustomersPage = () => {
                         {c.avatar ? (
                           <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-xs font-extrabold text-orange uppercase">{c.name.charAt(0)}</span>
+                          <span className="text-xs font-black text-emerald-600 uppercase">{c.name.charAt(0)}</span>
                         )}
                       </div>
-                      <Link to={`/customers/${c._id}`} className="text-deep-navy font-bold hover:text-orange transition-colors decoration-none">
+                      <Link to={`/customers/${c._id}`} className="text-deep-navy font-bold hover:text-emerald-600 transition-colors decoration-none">
                         {c.name}
                       </Link>
                     </div>

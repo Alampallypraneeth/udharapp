@@ -141,3 +141,25 @@ body, header, aside, tr, td, th, input, select, textarea, button,
 .emerald-gradient {
   background: linear-gradient(135deg, #059669 0%, #10B981 100%);
 }
+
+/* Button click tactile feel */
+button:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+/* Glass card styling */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+/* Modern smooth table styling */
+table tbody tr {
+  transition: background-color 0.15s ease-in-out;
+}
+

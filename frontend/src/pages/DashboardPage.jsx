@@ -316,57 +316,165 @@ const DashboardPage = () => {
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="p-5 bg-orange/8 border border-orange/20 rounded-2xl shadow-xs flex items-center justify-between transition-all hover:shadow-md">
-          <div>
-            <span className="text-xs font-semibold text-slate-gray block tracking-wide">{t('totalBalance') || 'Total Balance'}</span>
-            <span className="text-xl font-black text-deep-navy block mt-1 font-outfit">
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Net Store Position Card */}
+        <div className="p-5 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white rounded-2xl shadow-md shadow-emerald-700/20 relative overflow-hidden flex flex-col justify-between">
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-100/90">{t('totalBalance') || 'Net Balance'}</span>
+            <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold backdrop-blur-xs">Live Tally</span>
+          </div>
+          <div className="my-3">
+            <span className="text-2xl font-black font-outfit tracking-tight block">
               ₹{((stats?.youWillGet || 0) - (stats?.youWillGive || 0)).toLocaleString('en-IN')}
             </span>
-            <span className="text-sm text-slate-gray block mt-1 font-medium">{t('totalUdhar') || 'Total Transactions Balance'}</span>
+            <span className="text-xs text-emerald-100/80 font-medium block mt-0.5">Total Store Ledger Balance</span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-orange text-pure-white flex items-center justify-center font-bold text-lg shadow-sm">
-            ₹
+          <div className="flex items-center gap-1.5 text-[11px] text-emerald-200 font-semibold pt-1 border-t border-white/15">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+            <span>Updated in real-time</span>
           </div>
         </div>
 
-        <div className="p-5 bg-green-get/8 border border-green-get/20 rounded-2xl shadow-xs flex items-center justify-between transition-all hover:shadow-md">
-          <div>
-            <span className="text-xs font-semibold text-slate-gray block tracking-wide">{t('youWillGet')}</span>
-            <span className="text-xl font-black text-green-get block mt-1 font-outfit">
+        {/* You Will Get (Udhaar / Credit) */}
+        <div className="p-5 bg-pure-white border border-soft-gray rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-gray">{t('youWillGet')}</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+              <HiOutlineArrowDown size={18} />
+            </div>
+          </div>
+          <div className="my-3">
+            <span className="text-2xl font-black text-emerald-600 font-outfit tracking-tight block">
               ₹{(stats?.youWillGet || 0).toLocaleString('en-IN')}
             </span>
-            <span className="text-sm text-slate-gray block mt-1 font-medium">{stats?.customersWithDues || 0} {t('customers')}</span>
+            <span className="text-xs text-slate-gray font-medium block mt-0.5">
+              {stats?.customersWithDues || 0} {t('customersWithDues') || 'customers with dues'}
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-green-get text-pure-white flex items-center justify-center text-xl shadow-sm">
-            <HiOutlineArrowDown />
+          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-gray pt-1 border-t border-soft-gray/50">
+            <span>Credit Given (Udhaar)</span>
+            <span className="text-emerald-600 font-bold">To Collect</span>
           </div>
         </div>
 
-        <div className="p-5 bg-red-give/8 border border-red-give/20 rounded-2xl shadow-xs flex items-center justify-between transition-all hover:shadow-md">
-          <div>
-            <span className="text-xs font-semibold text-slate-gray block tracking-wide">{t('youWillGive')}</span>
-            <span className="text-xl font-black text-red-give block mt-1 font-outfit">
+        {/* You Will Give (Advance / Jama) */}
+        <div className="p-5 bg-pure-white border border-soft-gray rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-gray">{t('youWillGive')}</span>
+            <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-bold">
+              <HiOutlineArrowUp size={18} />
+            </div>
+          </div>
+          <div className="my-3">
+            <span className="text-2xl font-black text-rose-600 font-outfit tracking-tight block">
               ₹{(stats?.youWillGive || 0).toLocaleString('en-IN')}
             </span>
-            <span className="text-sm text-slate-gray block mt-1 font-medium">{t('advancePayments') || 'Advance accounts'}</span>
+            <span className="text-xs text-slate-gray font-medium block mt-0.5">
+              {t('advancePayments') || 'Advance accounts'}
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-red-give text-pure-white flex items-center justify-center text-xl shadow-sm">
-            <HiOutlineArrowUp />
+          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-gray pt-1 border-t border-soft-gray/50">
+            <span>Customer Advance</span>
+            <span className="text-rose-600 font-bold">Deposit</span>
           </div>
         </div>
 
-        <div className="p-5 bg-slate-gray/8 border border-slate-gray/20 rounded-2xl shadow-xs flex items-center justify-between transition-all hover:shadow-md">
-          <div>
-            <span className="text-xs font-semibold text-slate-gray block tracking-wide">{t('totalTransactions') || 'Total Transactions'}</span>
-            <span className="text-xl font-black text-deep-navy block mt-1 font-outfit">
+        {/* Total Activity & Today's Volume */}
+        <div className="p-5 bg-pure-white border border-soft-gray rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-gray">{t('totalTransactions') || 'Ledger Entries'}</span>
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center font-bold">
+              <HiOutlineCreditCard size={18} />
+            </div>
+          </div>
+          <div className="my-3">
+            <span className="text-2xl font-black text-deep-navy font-outfit tracking-tight block">
               {(stats?.todayTransactions || 0) + (stats?.pendingTransactions || 0)}
             </span>
-            <span className="text-sm text-slate-gray block mt-1 font-medium">{t('thisMonth') || 'This Month'}</span>
+            <span className="text-xs text-slate-gray font-medium block mt-0.5">
+              Active ledger entries
+            </span>
           </div>
-          <div className="w-12 h-12 rounded-full bg-slate-gray text-pure-white flex items-center justify-center text-xl shadow-sm">
-            <HiOutlineCreditCard />
+          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-gray pt-1 border-t border-soft-gray/50">
+            <span>Audit Tally</span>
+            <span className="text-indigo-600 font-bold">Verified</span>
           </div>
+        </div>
+      </div>
+
+      {/* Quick Actions Hub */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 bg-pure-white border border-soft-gray rounded-2xl shadow-2xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              if (customers.length > 0) {
+                setTxnForm({
+                  customer: customers[0]._id,
+                  type: 'credit',
+                  amount: '',
+                  description: '',
+                  date: new Date().toISOString().split('T')[0],
+                  paymentMode: 'cash'
+                });
+                setShowTxnModal(true);
+              } else {
+                setShowCustModal(true);
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-red-give/10 hover:bg-red-give/20 text-red-give text-xs font-bold rounded-xl border border-red-give/20 transition-all cursor-pointer shadow-2xs"
+            title="Record credit given to customer (Udhaar)"
+          >
+            <HiOutlineArrowUp size={14} /> You Gave (Udhaar)
+          </button>
+
+          <button
+            onClick={() => {
+              if (customers.length > 0) {
+                setTxnForm({
+                  customer: customers[0]._id,
+                  type: 'debit',
+                  amount: '',
+                  description: '',
+                  date: new Date().toISOString().split('T')[0],
+                  paymentMode: 'cash'
+                });
+                setShowTxnModal(true);
+              } else {
+                setShowCustModal(true);
+              }
+            }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-green-get/10 hover:bg-green-get/20 text-green-get text-xs font-bold rounded-xl border border-green-get/20 transition-all cursor-pointer shadow-2xs"
+            title="Record payment received from customer (Jama)"
+          >
+            <HiOutlineArrowDown size={14} /> You Got (Jama)
+          </button>
+
+          <button
+            onClick={() => setShowCustModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl border-none transition-all cursor-pointer shadow-xs shadow-emerald-600/20"
+          >
+            <HiOutlineUserAdd size={14} /> Add Customer
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/reminders')}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-light-cream/70 hover:bg-light-cream text-slate-gray hover:text-deep-navy text-xs font-semibold rounded-xl border border-soft-gray transition-all cursor-pointer"
+            title="Send WhatsApp or SMS Reminders"
+          >
+            <HiOutlineBell size={14} /> Reminders
+          </button>
+
+          <button
+            onClick={() => exportAllCustomersCSV(customers)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-light-cream/70 hover:bg-light-cream text-slate-gray hover:text-deep-navy text-xs font-semibold rounded-xl border border-soft-gray transition-all cursor-pointer"
+            title="Export CSV Balance Sheet"
+          >
+            <HiOutlineDownload size={14} /> Export CSV
+          </button>
         </div>
       </div>
 

@@ -469,11 +469,11 @@ const CustomerDetailPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-pure-white border border-soft-gray rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col items-center py-3 border-b border-soft-gray/50">
-            <div className="w-20 h-20 rounded-full border-2 border-orange/25 overflow-hidden flex items-center justify-center bg-light-cream shadow-sm relative mb-3">
+            <div className="w-20 h-20 rounded-full border-2 border-emerald-500/25 overflow-hidden flex items-center justify-center bg-light-cream shadow-sm relative mb-3">
               {customer.avatar ? (
                 <img src={customer.avatar} alt={customer.name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-black text-orange uppercase">{customer.name.charAt(0)}</span>
+                <span className="text-2xl font-black text-emerald-600 uppercase">{customer.name.charAt(0)}</span>
               )}
             </div>
             <h4 className="text-base font-bold text-deep-navy m-0">{customer.name}</h4>
@@ -598,7 +598,7 @@ const CustomerDetailPage = () => {
               </div>
             )}
 
-            <button className="w-full py-2.5 bg-transparent hover:bg-orange/5 text-orange border border-orange/30 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={openEditCustomerModal}>
+            <button className="w-full py-2.5 bg-transparent hover:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={openEditCustomerModal}>
               <HiOutlinePencil size={14} /> Edit Customer Profile
             </button>
           </div>
