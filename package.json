@@ -1,0 +1,14 @@
+{
+  "name": "digital-udhaar-app",
+  "version": "1.0.0",
+  "description": "Digital Udhaar Khata monorepo root",
+  "main": "server.js",
+  "scripts": {
+    "build": "cd backend && npm install",
+    "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
