@@ -873,13 +873,99 @@ app.delete('/api/cashbook/:id', authGuard, async (req, res) => {
 });
 app.get('/api/cashbook', authGuard, async (req, res) => {
   try {
+    const { period, paymentMode, search, startDate, endDate } = req.query;
+    const ownerId = req.user._id;
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const entries = await Cashbook.find({ owner: req.user._id }).sort({ date: -1 });
-      return res.json({ success: true, data: entries });
+      let query = { owner: ownerId };
+      if (paymentMode && ['cash', 'online'].includes(paymentMode)) {
+        query.paymentMode = paymentMode;
+      }
+      if (search) {
+        query.description = { $regex: search, $options: 'i' };
+      }
+
+      let dateFilter = {};
+      const now = new Date();
+      if (period === 'today') {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        dateFilter = { $gte: start };
+      } else if (period === 'yesterday') {
+        const start = new Date(now);
+        start.setDate(start.getDate() - 1);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(23, 59, 59, 999);
+        dateFilter = { $gte: start, $lte: end };
+      } else if (period === 'this-month') {
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        dateFilter = { $gte: start };
+      } else if (startDate || endDate) {
+        dateFilter = {};
+        if (startDate) dateFilter.$gte = new Date(startDate);
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          dateFilter.$lte = end;
+        }
+      }
+      if (Object.keys(dateFilter).length > 0) {
+        query.date = dateFilter;
+      }
+
+      const entries = await Cashbook.find(query).sort({ date: -1 });
+
+      // Lifetime cash in hand
+      const allEntries = await Cashbook.find({ owner: ownerId });
+      const lifetimeIn = allEntries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+      const lifetimeOut = allEntries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+      const cashInHand = lifetimeIn - lifetimeOut;
+
+      // Today's entries
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEntries = allEntries.filter((e) => new Date(e.date) >= todayStart);
+      const todayCashIn = todayEntries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+      const todayCashOut = todayEntries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+
+      // Filtered entries stats
+      let filteredIn = 0;
+      let filteredOut = 0;
+      entries.forEach((e) => {
+        if (e.type === 'in') filteredIn += e.amount;
+        else filteredOut += e.amount;
+      });
+
+      return res.json({
+        success: true,
+        count: entries.length,
+        data: entries,
+        stats: {
+          cashInHand,
+          todayCashIn,
+          todayCashOut,
+          filteredIn,
+          filteredOut,
+        },
+      });
     }
-    const memEntries = memoryStore.cashbook.filter((e) => e.owner.toString() === req.user._id.toString());
-    res.json({ success: true, data: memEntries });
+
+    const memEntries = memoryStore.cashbook.filter((e) => e.owner.toString() === ownerId.toString());
+    const lifetimeIn = memEntries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+    const lifetimeOut = memEntries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+    res.json({
+      success: true,
+      count: memEntries.length,
+      data: memEntries,
+      stats: {
+        cashInHand: lifetimeIn - lifetimeOut,
+        todayCashIn: 0,
+        todayCashOut: 0,
+        filteredIn: lifetimeIn,
+        filteredOut: lifetimeOut,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

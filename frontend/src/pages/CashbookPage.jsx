@@ -72,8 +72,14 @@ const CashbookPage = () => {
       }
 
       const { data } = await API.get('/cashbook', { params });
-      setEntries(data.data);
-      setStats(data.stats);
+      setEntries(Array.isArray(data?.data) ? data.data : []);
+      setStats(data?.stats || {
+        cashInHand: 0,
+        todayCashIn: 0,
+        todayCashOut: 0,
+        filteredIn: 0,
+        filteredOut: 0,
+      });
     } catch (err) {
       toast.error('Failed to load cashbook entries');
     } finally {
@@ -187,8 +193,16 @@ const CashbookPage = () => {
   };
 
   // Daily Profit Calculation
+  const safeEntries = Array.isArray(entries) ? entries : [];
+  const currentStats = stats || {
+    cashInHand: 0,
+    todayCashIn: 0,
+    todayCashOut: 0,
+    filteredIn: 0,
+    filteredOut: 0,
+  };
   const todayDateString = new Date().toDateString();
-  const todayEntries = entries.filter(e => new Date(e.date).toDateString() === todayDateString);
+  const todayEntries = safeEntries.filter(e => new Date(e.date).toDateString() === todayDateString);
   const todayIn = todayEntries.filter(e => e.type === 'in').reduce((sum, e) => sum + e.amount, 0);
   const todayOut = todayEntries.filter(e => e.type === 'out').reduce((sum, e) => sum + e.amount, 0);
   const dailyProfit = todayIn - todayOut;
@@ -206,7 +220,7 @@ const CashbookPage = () => {
       });
     }
 
-    entries.forEach(e => {
+    safeEntries.forEach(e => {
       if (e.type === 'out') {
         const entryDayStr = new Date(e.date).toDateString();
         const dayObj = last7Days.find(d => d.dateStr === entryDayStr);
@@ -232,7 +246,7 @@ const CashbookPage = () => {
       Other: 0
     };
     
-    entries.forEach(e => {
+    safeEntries.forEach(e => {
       if (e.type === 'out') {
         const cat = e.category || 'Other';
         if (categories[cat] !== undefined) {
@@ -278,16 +292,16 @@ const CashbookPage = () => {
       {/* Hero Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className={`border rounded-2xl p-6 shadow-sm flex flex-col justify-center transition-all ${
-          stats.cashInHand >= 0 
+          currentStats.cashInHand >= 0 
             ? 'bg-green-get/5 border-green-get/20' 
             : 'bg-red-give/5 border-red-give/20'
         }`}>
           <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-gray mb-2">
-            <HiOutlineBookOpen className={stats.cashInHand >= 0 ? 'text-green-get' : 'text-red-give'} size={18} /> 
+            <HiOutlineBookOpen className={currentStats.cashInHand >= 0 ? 'text-green-get' : 'text-red-give'} size={18} /> 
             <span>{t('cashInHand')}</span>
           </div>
-          <div className={`text-3xl font-extrabold ${stats.cashInHand >= 0 ? 'text-green-get' : 'text-red-give'}`}>
-            ₹{stats.cashInHand.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div className={`text-3xl font-extrabold ${currentStats.cashInHand >= 0 ? 'text-green-get' : 'text-red-give'}`}>
+            ₹{currentStats.cashInHand.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
           <div className="text-xs text-slate-gray mt-1">{t('cashInHandDesc')}</div>
         </div>
@@ -299,7 +313,7 @@ const CashbookPage = () => {
             </span>
             <div className="text-xl font-extrabold text-green-get flex items-center gap-1">
               <HiOutlineArrowDown size={18} />
-              ₹{stats.todayCashIn.toLocaleString('en-IN')}
+              ₹{currentStats.todayCashIn.toLocaleString('en-IN')}
             </div>
           </div>
           <div className="bg-pure-white border border-soft-gray rounded-2xl p-5 flex flex-col justify-center shadow-sm">
@@ -308,7 +322,7 @@ const CashbookPage = () => {
             </span>
             <div className="text-xl font-extrabold text-red-give flex items-center gap-1">
               <HiOutlineArrowUp size={18} />
-              ₹{stats.todayCashOut.toLocaleString('en-IN')}
+              ₹{currentStats.todayCashOut.toLocaleString('en-IN')}
             </div>
           </div>
         </div>
@@ -387,25 +401,25 @@ const CashbookPage = () => {
 
           <div className="pt-2 border-t border-soft-gray/50 mt-2">
             <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-gray mb-2">Monthly Cashflow Ratio</h4>
-            {stats.filteredIn === 0 && stats.filteredOut === 0 ? (
+            {currentStats.filteredIn === 0 && currentStats.filteredOut === 0 ? (
               <div className="text-xs text-slate-gray/60 text-center py-2">No transactions in selected period</div>
             ) : (
               <div className="space-y-1">
                 <div className="w-full bg-soft-white h-3 rounded-lg overflow-hidden flex">
                   <div 
                     className="bg-green-get h-full"
-                    style={{ width: `${(stats.filteredIn / (stats.filteredIn + stats.filteredOut || 1)) * 100}%` }}
-                    title={`Cash In: ${((stats.filteredIn / (stats.filteredIn + stats.filteredOut || 1)) * 100).toFixed(0)}%`}
+                    style={{ width: `${(currentStats.filteredIn / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100}%` }}
+                    title={`Cash In: ${((currentStats.filteredIn / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100).toFixed(0)}%`}
                   />
                   <div 
                     className="bg-red-give h-full"
-                    style={{ width: `${(stats.filteredOut / (stats.filteredIn + stats.filteredOut || 1)) * 100}%` }}
-                    title={`Cash Out: ${((stats.filteredOut / (stats.filteredIn + stats.filteredOut || 1)) * 100).toFixed(0)}%`}
+                    style={{ width: `${(currentStats.filteredOut / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100}%` }}
+                    title={`Cash Out: ${((currentStats.filteredOut / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100).toFixed(0)}%`}
                   />
                 </div>
                 <div className="flex justify-between text-[9px] text-slate-gray font-semibold">
-                  <span className="text-green-get">In: {((stats.filteredIn / (stats.filteredIn + stats.filteredOut || 1)) * 100).toFixed(0)}%</span>
-                  <span className="text-red-give">Out: {((stats.filteredOut / (stats.filteredIn + stats.filteredOut || 1)) * 100).toFixed(0)}%</span>
+                  <span className="text-green-get">In: {((currentStats.filteredIn / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100).toFixed(0)}%</span>
+                  <span className="text-red-give">Out: {((currentStats.filteredOut / (currentStats.filteredIn + currentStats.filteredOut || 1)) * 100).toFixed(0)}%</span>
                 </div>
               </div>
             )}
@@ -574,13 +588,13 @@ const CashbookPage = () => {
               <div>
                 <span>Total Cash In: </span>
                 <span className="text-green-get">
-                  ₹{stats.filteredIn.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹{currentStats.filteredIn.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
               </div>
               <div>
                 <span>Total Cash Out: </span>
                 <span className="text-red-give">
-                  ₹{stats.filteredOut.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹{currentStats.filteredOut.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
