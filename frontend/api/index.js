@@ -16,26 +16,45 @@ const memoryStore = {
 };
 
 // ── Database Connection Cache for Vercel Serverless ──
-let isConnecting = false;
-async function connectToMongo() {
-  if (mongoose.connection.readyState === 1) return true;
-  const uri = process.env.MONGO_URI;
-  if (!uri) return false;
-  if (isConnecting) return false;
+const ATLAS_URI = 'mongodb+srv://alampallypraneeth:alampallypraneeth@cluster0.dzmd3lj.mongodb.net/udhaar-khata?retryWrites=true&w=majority';
+let cachedConn = null;
+let cachedPromise = null;
 
-  isConnecting = true;
-  try {
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 3000,
-    });
-    console.log('✅ Connected to MongoDB Atlas on Vercel');
-    isConnecting = false;
+async function connectToMongo() {
+  if (cachedConn && mongoose.connection.readyState === 1) {
     return true;
+  }
+  const uri = process.env.MONGO_URI || ATLAS_URI;
+  if (!uri) return false;
+
+  if (!cachedPromise) {
+    cachedPromise = mongoose
+      .connect(uri, {
+        serverSelectionTimeoutMS: 6000,
+      })
+      .then(() => {
+        console.log('✅ Connected to MongoDB Atlas on Vercel');
+        cachedConn = mongoose.connection;
+        return true;
+      })
+      .catch((err) => {
+        console.warn('⚠️ MongoDB connection error on Vercel:', err.message);
+        cachedPromise = null;
+        return false;
+      });
+  }
+
+  try {
+    const connected = await cachedPromise;
+    if (connected && mongoose.connection.readyState === 1) {
+      cachedConn = mongoose.connection;
+      return true;
+    }
   } catch (err) {
-    console.warn('⚠️ MongoDB Atlas unavailable on Vercel, using high-speed fallback store:', err.message);
-    isConnecting = false;
+    cachedPromise = null;
     return false;
   }
+  return false;
 }
 
 // ── Mongoose Models ──
