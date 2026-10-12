@@ -3,8 +3,10 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import axios from 'axios';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'udhaar_khata_super_secret_key_2026';
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 // ── In-Memory / Hybrid Storage Fallback (Guarantees zero-downtime even if MongoDB is paused) ──
 const memoryStore = {
@@ -865,6 +867,279 @@ app.post('/api/ai/voice-entry', authGuard, async (req, res) => {
       success: true,
       message: `Parsed voice: ₹${amount} ${isCredit ? 'Credit' : 'Payment'}`,
       data: { amount, type: isCredit ? 'credit' : 'debit' },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── KhataBot AI Chat Assistant Endpoint (Answers ALL questions) ──
+function findMatchedCustomer(text, customers) {
+  if (!text || !customers) return null;
+  const normalized = text.toLowerCase();
+  for (const c of customers) {
+    if (c.name && normalized.includes(c.name.toLowerCase())) return c;
+    if (c.phone && normalized.includes(c.phone)) return c;
+  }
+  const words = normalized.split(/\s+/).filter(w => w.length > 2);
+  for (const c of customers) {
+    if (!c.name) continue;
+    const nameWords = c.name.toLowerCase().split(/\s+/);
+    if (words.some(w => nameWords.includes(w))) return c;
+  }
+  return null;
+}
+
+app.post('/api/ai/chat', authGuard, async (req, res) => {
+  try {
+    const { message, history, lang } = req.body;
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'Message is required' });
+    }
+
+    const ownerId = req.user._id;
+    let owner = null;
+    let customers = [];
+    let transactions = [];
+    let cashbookEntries = [];
+
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      [owner, customers, transactions, cashbookEntries] = await Promise.all([
+        User.findById(ownerId),
+        Customer.find({ owner: ownerId }),
+        Transaction.find({ owner: ownerId }).sort({ date: -1, createdAt: -1 }).limit(25).populate('customer', 'name phone'),
+        Cashbook.find({ owner: ownerId }).sort({ date: -1 }).limit(15),
+      ]);
+    } else {
+      owner = memoryStore.users.find(u => u._id === ownerId.toString());
+      customers = memoryStore.customers.filter(c => c.owner === ownerId.toString());
+      transactions = memoryStore.transactions.filter(t => t.owner === ownerId.toString()).slice(-25).reverse();
+      cashbookEntries = memoryStore.cashbook.filter(c => c.owner === ownerId.toString()).slice(-15).reverse();
+    }
+
+    const ownerName = owner ? owner.name : 'Merchant';
+    const storeName = owner ? owner.storeName : 'KhataPay Store';
+    const langName = lang === 'hi' ? 'Hindi' : lang === 'te' ? 'Telugu' : 'English';
+
+    const totalUdhaar = customers.reduce((acc, c) => c.balance > 0 ? acc + c.balance : acc, 0);
+    const totalJama = customers.reduce((acc, c) => c.balance < 0 ? acc + Math.abs(c.balance) : acc, 0);
+    const netBalance = totalUdhaar - totalJama;
+    const customersWithDues = customers.filter(c => c.balance > 0).length;
+    const totalCashIn = cashbookEntries.filter(e => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+    const totalCashOut = cashbookEntries.filter(e => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+    const netCash = totalCashIn - totalCashOut;
+
+    // ── 1. Call Groq AI Models with Fallback ──
+    if (GROQ_API_KEY) {
+      const systemPrompt = `You are KhataBot, the all-knowing AI assistant and financial advisor for KhataPay.
+You are assisting ${ownerName}, owner of "${storeName}".
+Current Date & Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.
+
+📊 REAL-TIME FINANCIAL CONTEXT:
+- Total Customers: ${customers.length} (with dues: ${customersWithDues})
+- Total Udhaar (To Collect): ₹${totalUdhaar.toLocaleString('en-IN')}
+- Total Jama (Advance Held): ₹${totalJama.toLocaleString('en-IN')}
+- Net Store Position: ₹${netBalance.toLocaleString('en-IN')}
+- Cash in Drawer: ₹${netCash.toLocaleString('en-IN')}
+
+👥 CUSTOMERS:
+${customers.map(c => `- ${c.name} | Balance: ₹${c.balance} (${c.balance > 0 ? 'owes you' : c.balance < 0 ? 'advance' : 'settled'}) | Score: ${c.creditScore || 750} | Risk: ${(c.riskLevel || 'low').toUpperCase()}`).join('\n')}
+
+📝 RECENT TRANSACTIONS:
+${transactions.map((t, i) => `${i + 1}. Date: ${new Date(t.date).toLocaleDateString('en-IN')}, Customer: ${t.customer ? t.customer.name : 'Unknown'}, Type: ${t.type === 'credit' ? 'Udhaar' : 'Jama'}, Amount: ₹${t.amount}`).join('\n')}
+
+RULES:
+1. Answer ANY question asked by the merchant clearly, concisely, and helpfully.
+2. If asked about customers, debts, balances, or transactions, cite exact figures from above.
+3. If asked for business/shop advice, give practical kirana/retail tips.
+4. If asked how to use any feature of KhataPay (SMS reminders, WhatsApp reminders, UPI checkout links, Cashbook, Soundbox, CSV export), explain step-by-step.
+5. Respond strictly in ${langName}.
+6. Output ONLY valid JSON: { "response": "markdown string", "suggestions": ["...", "..."] }`;
+
+      const groqMessages = [{ role: 'system', content: systemPrompt }];
+      if (history && Array.isArray(history)) groqMessages.push(...history.slice(-6));
+      const lastMsg = history && history.length > 0 ? history[history.length - 1] : null;
+      if (!lastMsg || lastMsg.content !== message) groqMessages.push({ role: 'user', content: message });
+
+      const models = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
+      for (const m of models) {
+        try {
+          const resp = await axios.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+              model: m,
+              messages: groqMessages,
+              response_format: { type: 'json_object' },
+              temperature: 0.2
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${GROQ_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              timeout: 6000
+            }
+          );
+          const parsed = JSON.parse(resp.data.choices[0].message.content);
+          if (parsed && parsed.response) {
+            return res.json({
+              success: true,
+              response: parsed.response,
+              suggestions: parsed.suggestions || ["Who has highest due?", "Show this month collection", "Send payment reminder"]
+            });
+          }
+        } catch (err) {
+          console.warn(`Groq error on ${m}:`, err.message);
+        }
+      }
+    }
+
+    // ── 2. Local Comprehensive Intelligence Fallback ──
+    const normalized = message.toLowerCase().trim();
+
+    // A. Greeting
+    if (/^(hi|hello|hey|namaste|నమస్తే|नमस्ते|good morning|good evening)/i.test(normalized)) {
+      return res.json({
+        success: true,
+        response: `Namaste **${ownerName}**! I am **KhataBot** 🤖, your KhataPay assistant for **"${storeName}"**.\n\nAsk me **anything** about your store:\n* 💰 **"Who has highest due?"**\n* 📊 **"What is my net balance?"**\n* ⚠️ **"Who are the risky customers?"**\n* 📱 **"How do I send SMS reminders?"**\n* 💵 **"Show cashbook expenses"**`,
+        suggestions: ["What is my net balance?", "Who has highest due?", "Show this month collection", "Risky customers"]
+      });
+    }
+
+    // B. Store / Owner
+    if (normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('my shop') || normalized.includes('my store')) {
+      return res.json({
+        success: true,
+        response: `🏪 Your store name is **"${storeName}"**.\n\n* **Owner:** ${ownerName}\n* **Active Customers:** ${customers.length}\n* **Total Due to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')}`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+    if (normalized.includes('my name') || normalized.includes('who am i') || normalized.includes('who i am')) {
+      return res.json({
+        success: true,
+        response: `👤 You are **${ownerName}**, the store manager of **"${storeName}"** on KhataPay!`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+
+    // C. Specific Customer
+    const matchedCustomer = findMatchedCustomer(message, customers);
+    if (matchedCustomer) {
+      const isDue = matchedCustomer.balance > 0;
+      const isAdvance = matchedCustomer.balance < 0;
+      const balText = isDue 
+        ? `owes you **₹${matchedCustomer.balance.toLocaleString('en-IN')}** (Udhaar)` 
+        : isAdvance 
+          ? `has an advance payment of **₹${Math.abs(matchedCustomer.balance).toLocaleString('en-IN')}**` 
+          : `is all settled with **₹0 balance** ✅`;
+
+      return res.json({
+        success: true,
+        response: `👤 **Customer Report: ${matchedCustomer.name}**\n\n* **Balance:** ${balText}\n* **Phone:** ${matchedCustomer.phone || 'N/A'}\n* **Credit Score:** **${matchedCustomer.creditScore || 750} / 900**\n* **Risk:** **${(matchedCustomer.riskLevel || 'low').toUpperCase()}**`,
+        suggestions: [`Send reminder to ${matchedCustomer.name}`, "Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // D. Total Udhaar / Due
+    if (normalized.includes('total due') || normalized.includes('total udhar') || normalized.includes('how much udhar') || normalized.includes('who owes me') || normalized.includes('to collect') || normalized.includes('उधार') || normalized.includes('ఉధార్')) {
+      const debtors = customers.filter(c => c.balance > 0).sort((a, b) => b.balance - a.balance);
+      const topList = debtors.slice(0, 5).map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')}`).join('\n');
+      return res.json({
+        success: true,
+        response: `💰 **Total Udhaar (To Collect):**\n\nYou have **₹${totalUdhaar.toLocaleString('en-IN')}** across **${debtors.length}** customers with pending dues.\n\n**Top Dues:**\n${topList || 'No pending dues!'}`,
+        suggestions: ["Send payment reminders", "Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // E. Net Balance / Summary
+    if (normalized.includes('net balance') || normalized.includes('total balance') || normalized.includes('overview') || normalized.includes('summary')) {
+      return res.json({
+        success: true,
+        response: `📊 **Store Summary for "${storeName}":**\n\n* **Net Ledger Position:** **₹${netBalance.toLocaleString('en-IN')}**\n* **Total Udhaar (You'll Get):** ₹${totalUdhaar.toLocaleString('en-IN')} (${customersWithDues} customers)\n* **Total Advance (You'll Give):** ₹${totalJama.toLocaleString('en-IN')}\n* **Total Customers:** ${customers.length}\n* **Cash in Drawer (Cashbook Net):** ₹${netCash.toLocaleString('en-IN')}`,
+        suggestions: ["Who has highest due?", "Show this month collection", "Show cashbook expenses"]
+      });
+    }
+
+    // F. Highest Due
+    if (normalized.includes('highest due') || normalized.includes('highest udhar') || normalized.includes('owes the most') || normalized.includes('top due')) {
+      const sorted = [...customers].sort((a, b) => b.balance - a.balance);
+      const top = sorted[0];
+      if (!top || top.balance <= 0) {
+        return res.json({
+          success: true,
+          response: "🎉 All customers are clear! There are zero outstanding dues right now.",
+          suggestions: ["What is my net balance?", "Show this month collection"]
+        });
+      }
+      return res.json({
+        success: true,
+        response: `👑 **Highest Due Customer:**\n\n**${top.name}** has the highest pending due of **₹${top.balance.toLocaleString('en-IN')}**.\n\n* Phone: ${top.phone}\n* Credit Score: ${top.creditScore || 750}`,
+        suggestions: [`Send reminder to ${top.name}`, "Who are the risky customers?", "What is my net balance?"]
+      });
+    }
+
+    // G. Risky Customers
+    if (normalized.includes('risky') || normalized.includes('high risk') || normalized.includes('late payer')) {
+      const risky = customers.filter(c => c.duePrediction === 'risky' || c.riskLevel === 'high' || (c.creditScore && c.creditScore < 600));
+      if (risky.length === 0) {
+        return res.json({
+          success: true,
+          response: "✅ Great news! You have **0 High-Risk** customers right now. All your customers pay on time.",
+          suggestions: ["Who has highest due?", "What is my net balance?"]
+        });
+      }
+      const list = risky.map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')} (Score: ${c.creditScore || 550})`).join('\n');
+      return res.json({
+        success: true,
+        response: `⚠️ **High Risk / Delay Customers:**\n\n${list}`,
+        suggestions: ["Send payment reminders", "Who has highest due?"]
+      });
+    }
+
+    // H. Recent Transactions
+    if (normalized.includes('last transaction') || normalized.includes('recent transaction') || normalized.includes('recent payment') || normalized.includes('who paid')) {
+      if (transactions.length === 0) {
+        return res.json({
+          success: true,
+          response: "You don't have any recorded transactions yet.",
+          suggestions: ["What is my net balance?", "Who has highest due?"]
+        });
+      }
+      const top5 = transactions.slice(0, 5).map((t, i) => {
+        const typeStr = t.type === 'credit' ? '🔴 Udhaar' : '🟢 Jama';
+        return `${i + 1}. **${t.customer ? t.customer.name : 'Unknown'}**: ${typeStr} **₹${t.amount.toLocaleString('en-IN')}** (${new Date(t.date).toLocaleDateString('en-IN')})`;
+      }).join('\n');
+      return res.json({
+        success: true,
+        response: `📝 **Recent Ledger Activity:**\n\n${top5}`,
+        suggestions: ["Show this month collection", "What is my net balance?"]
+      });
+    }
+
+    // I. Reminders (SMS / WhatsApp)
+    if (normalized.includes('sms') || normalized.includes('whatsapp') || normalized.includes('reminder')) {
+      return res.json({
+        success: true,
+        response: `📲 **Sending Payment Reminders on KhataPay:**\n\n1. Go to **Reminders** in the sidebar or open any customer's page.\n2. Click **"Send SMS"** or **"Send WhatsApp"**.\n3. KhataPay automatically attaches an instant verified UPI settlement link (\`https://udharapp.vercel.app/pay/:customerId\`).\n4. You can send via Fast2SMS Cloud or open directly in your phone's SMS / WhatsApp app!`,
+        suggestions: ["Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // J. Cashbook / Expenses
+    if (normalized.includes('cashbook') || normalized.includes('expense') || normalized.includes('petty cash')) {
+      return res.json({
+        success: true,
+        response: `💵 **Cashbook Status:**\n\n* **Total Cash In:** ₹${totalCashIn.toLocaleString('en-IN')}\n* **Total Cash Out (Expenses):** ₹${totalCashOut.toLocaleString('en-IN')}\n* **Net Drawer Cash:** **₹${netCash.toLocaleString('en-IN')}**`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+
+    // K. General helpful reply
+    return res.json({
+      success: true,
+      response: `I'm here to help with all questions about **"${storeName}"**!\n\n* 💰 **Udhaar to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')} (${customersWithDues} customers)\n* 💵 **Advance Received:** ₹${totalJama.toLocaleString('en-IN')}\n* 📊 **Net Position:** **₹${netBalance.toLocaleString('en-IN')}**\n* 👥 **Total Customers:** ${customers.length}\n* 📥 **Cash in Drawer:** ₹${netCash.toLocaleString('en-IN')}\n\nYou can ask about any customer, payment reminders, cashbook expenses, or debt recovery advice!`,
+      suggestions: ["What is my net balance?", "Who has highest due?", "Show this month collection", "Risky customers"]
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

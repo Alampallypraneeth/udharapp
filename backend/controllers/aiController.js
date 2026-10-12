@@ -204,7 +204,7 @@ You MUST respond ONLY with a JSON object in this format: { "isCashbook": boolean
         const groqResponse = await axios.post(
           'https://api.groq.com/openai/v1/chat/completions',
           {
-            model: 'llama-3.1-8b-instant',
+            model: 'qwen/qwen3.8-27b',
             messages: [
               { role: 'system', content: voicePrompt },
               { role: 'user', content: text }
@@ -386,7 +386,7 @@ You MUST respond ONLY with a JSON object in this format: { "isCashbook": boolean
   }
 };
 
-// @desc    Mini Chatbot AI Assistant
+// @desc    KhataBot AI Assistant (Answers ALL ledger, business, app, and general questions)
 // @route   POST /api/ai/chat
 const chatAssistant = async (req, res, next) => {
   try {
@@ -398,301 +398,390 @@ const chatAssistant = async (req, res, next) => {
     const ownerId = req.user._id;
     const User = require('../models/User');
     const owner = await User.findById(ownerId);
-    const ownerName = owner ? owner.name : 'Shopkeeper';
-    const storeName = owner ? owner.storeName : 'Udhaar Khata';
+    const ownerName = owner ? owner.name : 'Merchant';
+    const storeName = owner ? owner.storeName : 'KhataPay Store';
     const langName = lang === 'hi' ? 'Hindi' : lang === 'te' ? 'Telugu' : 'English';
 
     const customers = await Customer.find({ owner: ownerId });
     
-    // Fetch last 20 transactions populated with customer names
+    // Fetch last 25 transactions populated with customer names
     const transactions = await Transaction.find({ owner: ownerId })
       .sort({ date: -1, createdAt: -1 })
-      .limit(20)
-      .populate('customer', 'name');
+      .limit(25)
+      .populate('customer', 'name phone');
 
-    // Fetch last 10 cashbook entries
+    // Fetch last 15 cashbook entries
     const cashbookEntries = await CashbookEntry.find({ owner: ownerId })
       .sort({ date: -1 })
-      .limit(10);
+      .limit(15);
 
-    if (process.env.GROQ_API_KEY) {
-      try {
-        const systemPrompt = `You are KathaGPT, an intelligent ledger helper for a kirana store / small shopkeeper.
-You are assisting the shop owner, ${ownerName}, who runs the shop named "${storeName}".
-Today's date and time is ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.
+    // Calculate store aggregates
+    const totalUdhaar = customers.reduce((acc, c) => c.balance > 0 ? acc + c.balance : acc, 0);
+    const totalJama = customers.reduce((acc, c) => c.balance < 0 ? acc + Math.abs(c.balance) : acc, 0);
+    const netBalance = totalUdhaar - totalJama;
+    const customersWithDues = customers.filter(c => c.balance > 0).length;
+    const totalCashIn = cashbookEntries.filter(e => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+    const totalCashOut = cashbookEntries.filter(e => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+    const netCash = totalCashIn - totalCashOut;
 
-Here is the real-time data of the shopkeeper's customers (names, current balances, credit scores, AI prediction labels, risk levels):
-${customers.map(c => `- Name: ${c.name}, Balance: ₹${c.balance} (${c.balance > 0 ? 'owes you / due' : c.balance < 0 ? 'advance' : 'settled'}), Credit Score: ${c.creditScore || 750}, AI Prediction: ${c.duePrediction === 'trusted' ? 'Trusted Customer ✅' : c.duePrediction === 'delay' ? 'Late Payer ⚠️' : 'Risky Customer 🚨'}, Risk: ${c.riskLevel.toUpperCase()}`).join('\n')}
+    // ── 1. Try Groq AI Engine (with auto-fallback between models) ──
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey) {
+      const systemPrompt = `You are KhataBot, the all-knowing AI assistant and financial advisor for KhataPay (Smart Ledger OS).
+You are assisting the store owner, ${ownerName}, who operates "${storeName}".
+Current Date & Time: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}.
 
-Here is the list of recent ledger transactions (last 20 entries, sorted from newest to oldest):
-${transactions.map((t, index) => `${index + 1}. Date: ${new Date(t.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}, Customer: ${t.customer ? t.customer.name : 'Unknown'}, Type: ${t.type === 'credit' ? 'Udhaar (Gave / Customer owes)' : 'Jama (Got / Paid back)'}, Amount: ₹${t.amount}, Description: ${t.description || 'none'}, Status: ${t.paymentStatus}, Mode: ${t.paymentMode || 'none'}, Txn ID: ${t._id}`).join('\n')}
+📊 REAL-TIME STORE FINANCIAL DASHBOARD:
+- Total Active Customers: ${customers.length}
+- Customers with Outstanding Dues: ${customersWithDues}
+- Total Udhaar (To Collect): ₹${totalUdhaar.toLocaleString('en-IN')}
+- Total Jama (Advance Received): ₹${totalJama.toLocaleString('en-IN')}
+- Net Store Ledger Position: ₹${netBalance.toLocaleString('en-IN')}
+- Recent Cashbook Income (Cash In): ₹${totalCashIn.toLocaleString('en-IN')}
+- Recent Cashbook Expenses (Cash Out): ₹${totalCashOut.toLocaleString('en-IN')}
+- Net Cash in Drawer: ₹${netCash.toLocaleString('en-IN')}
 
-Here is the list of recent cashbook entries (last 10 business income/expense items):
-${cashbookEntries.map((e, index) => `${index + 1}. Date: ${new Date(e.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}, Type: ${e.type === 'in' ? 'Income (Cash In)' : 'Expense (Cash Out)'}, Amount: ₹${e.amount}, Category: ${e.category}, Description: ${e.description || 'none'}`).join('\n')}
+👥 CUSTOMER LEDGER DIRECTORY:
+${customers.map(c => `- ${c.name} | Phone: ${c.phone} | Balance: ₹${c.balance} (${c.balance > 0 ? 'owes you (Due)' : c.balance < 0 ? 'advance paid' : 'settled'}) | Score: ${c.creditScore || 750} | Risk: ${(c.riskLevel || 'low').toUpperCase()} | Prediction: ${c.duePrediction === 'trusted' ? 'Trusted ✅' : c.duePrediction === 'delay' ? 'Late Payer ⚠️' : 'Risky 🚨'}`).join('\n')}
 
-Rules for your responses:
-1. Answer the user's question accurately using the customer, transaction, and cashbook data provided above.
-2. If they ask about recent transactions, specific items purchased, last payment received, or who paid recently, refer to the transaction and cashbook lists.
-3. Keep your answers brief, professional, and clear. Avoid lengthy pleasantries.
-4. The user's active application interface language is ${langName}. You MUST respond strictly in ${langName}. Do NOT use any other language (e.g., if the language is English, write your entire response and suggestion buttons in English only; if Hindi, write in Hindi only; if Telugu, write in Telugu only). Do not mix languages.
-5. Provide 2-3 short, relevant follow-up query suggestions that the user might want to click next (e.g. "Who has highest due?", "Show this month collection", "Risky customers").
-6. You are talking directly to the shop owner, ${ownerName}. When they say 'who am I', 'my name', or ask you to recognise their name, they are referring to themselves. Confirm warmly and conversationally that they are ${ownerName}, the owner of "${storeName}". Do NOT search the customer ledger/database for their name to see if they are a customer.
+📝 RECENT TRANSACTIONS (Newest to Oldest):
+${transactions.map((t, index) => `${index + 1}. Date: ${new Date(t.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}, Customer: ${t.customer ? t.customer.name : 'Unknown'}, Type: ${t.type === 'credit' ? 'Udhaar (Gave)' : 'Jama (Got)'}, Amount: ₹${t.amount}, Mode: ${t.paymentMode || 'cash'}, Status: ${t.paymentStatus}, Note: ${t.description || 'none'}`).join('\n')}
 
-You MUST respond ONLY with a JSON object in this format:
+💰 RECENT CASHBOOK ENTRIES:
+${cashbookEntries.map((e, index) => `${index + 1}. Date: ${new Date(e.date).toLocaleString('en-IN', { day: '2-digit', month: 'short' })}, Type: ${e.type === 'in' ? 'Income' : 'Expense'}, Amount: ₹${e.amount}, Category: ${e.category}, Note: ${e.description || 'none'}`).join('\n')}
+
+KHATAPAY APP CAPABILITIES:
+- SMS Reminders: Send SMS payment reminders via Fast2SMS Cloud Gateway or native device SMS launcher with pre-filled text and instant UPI checkout link.
+- WhatsApp Reminders: 1-click WhatsApp message to customer with their exact balance and payment link.
+- Customer Online Payment: Customers can visit /pay/:customerId to pay via any UPI app (PhonePe, GPay, Paytm) and enter the 12-digit UTR to clear balance.
+- Soundbox: Audio chime feature that plays a confirmation voice alert when payments are received.
+- Export CSV: Instant Excel/CSV download of customer balances and ledger entries.
+- Security: 4-digit PIN lock and biometric unlock.
+
+RULES FOR KHATABOT:
+1. Answer ANY question asked by the merchant accurately, warmly, and helpfully. Never refuse a question.
+2. If asked about customers, debts, balances, or transactions, cite exact figures from the real-time context above.
+3. If asked for business/shopkeeper advice (improving collections, managing udhaar, pricing, profit margin, kirana shop management), provide expert, practical tips.
+4. If asked how to use any feature of KhataPay (sending reminders, recording payments, adding customers, cashbook, exports), give clear step-by-step guidance.
+5. If the merchant asks 'who am I' or mentions their name, address them warmly as ${ownerName}, owner of "${storeName}".
+6. Respond strictly in ${langName}.
+7. Return 2-3 short, relevant clickable suggestion follow-ups.
+
+YOU MUST RESPOND ONLY WITH A VALID JSON OBJECT:
 {
-  "response": "Your structured markdown text response here",
+  "response": "Your structured, beautiful markdown response here",
   "suggestions": ["suggestion 1", "suggestion 2"]
 }`;
 
-        const groqMessages = [
-          { role: 'system', content: systemPrompt }
-        ];
+      const groqMessages = [{ role: 'system', content: systemPrompt }];
+      if (history && Array.isArray(history)) {
+        groqMessages.push(...history.slice(-6));
+      }
+      const lastHistoryMsg = history && history.length > 0 ? history[history.length - 1] : null;
+      if (!lastHistoryMsg || lastHistoryMsg.content !== message) {
+        groqMessages.push({ role: 'user', content: message });
+      }
 
-        if (history && Array.isArray(history)) {
-          groqMessages.push(...history);
-        }
+      const modelsToTry = ['qwen/qwen3.8-27b', 'openai/gpt-oss-20b'];
 
-        const lastHistoryMsg = history && history.length > 0 ? history[history.length - 1] : null;
-        if (!lastHistoryMsg || lastHistoryMsg.content !== message) {
-          groqMessages.push({ role: 'user', content: message });
-        }
-
-        const groqResponse = await axios.post(
-          'https://api.groq.com/openai/v1/chat/completions',
-          {
-            model: 'llama-3.1-8b-instant',
-            messages: groqMessages,
-            response_format: { type: 'json_object' },
-            temperature: 0.2
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-              'Content-Type': 'application/json'
+      for (const modelName of modelsToTry) {
+        try {
+          const groqResponse = await axios.post(
+            'https://api.groq.com/openai/v1/chat/completions',
+            {
+              model: modelName,
+              messages: groqMessages,
+              response_format: { type: 'json_object' },
+              temperature: 0.2
             },
-            timeout: 7000
-          }
-        );
+            {
+              headers: {
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': 'application/json'
+              },
+              timeout: 6000
+            }
+          );
 
-        const parsed = JSON.parse(groqResponse.data.choices[0].message.content);
-        return res.status(200).json({
-          success: true,
-          response: parsed.response,
-          suggestions: parsed.suggestions || []
-        });
-      } catch (groqErr) {
-        console.error('Groq chat error, falling back to local:', groqErr.message);
+          const content = groqResponse.data.choices[0].message.content;
+          const parsed = JSON.parse(content);
+          if (parsed && parsed.response) {
+            return res.status(200).json({
+              success: true,
+              response: parsed.response,
+              suggestions: parsed.suggestions || ["Who has highest due?", "Show this month collection", "Send payment reminder"]
+            });
+          }
+        } catch (modelErr) {
+          console.warn(`Groq model ${modelName} error:`, modelErr.message);
+        }
       }
     }
 
-    // Fallback to local rule-based chatbot if key is missing or API fails
+    // ── 2. Comprehensive Local KhataBot Intelligence Engine ──
     const normalized = message.toLowerCase().trim();
 
-    // 0. Check for Last/Recent Transaction queries
-    if (normalized.includes('last transaction') || normalized.includes('recent transaction') || normalized.includes('recent payment') || normalized.includes('last payment') || normalized.includes('recent entry')) {
-      const lastTxn = await Transaction.findOne({ owner: ownerId })
-        .sort({ date: -1, createdAt: -1 })
-        .populate('customer', 'name');
-      
-      if (!lastTxn) {
-        return res.status(200).json({
-          success: true,
-          response: "You haven't recorded any transactions yet.",
-          suggestions: ["Show this month collection", "Who has highest due?"]
-        });
-      }
-
-      const formattedDate = new Date(lastTxn.date).toLocaleString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-
+    // A. Greeting
+    if (/^(hi|hello|hey|hola|greetings|namaste|నమస్తే|नमस्ते|good morning|good evening|good afternoon)/i.test(normalized)) {
       return res.status(200).json({
         success: true,
-        response: `📝 **Last Transaction Details:**\n\n* **Customer:** **${lastTxn.customer ? lastTxn.customer.name : 'Unknown'}**\n* **Type:** ${lastTxn.type === 'credit' ? 'Udhaar (Gave / Customer owes)' : 'Jama (Got / Paid back)'}\n* **Amount:** **₹${lastTxn.amount.toLocaleString('en-IN')}**\n* **Date & Time:** ${formattedDate}\n* **Description:** ${lastTxn.description || 'No description'}\n* **Status:** ${lastTxn.paymentStatus || 'Pending'}\n* **Payment Mode:** ${lastTxn.paymentMode || 'none'}\n* **ID:** \`${lastTxn._id}\``,
-        suggestions: ["Show this month collection", "Who has highest due?", "Risky customers"]
+        response: `Namaste **${ownerName}**! I am **KhataBot** 🤖, your KhataPay intelligent assistant for **"${storeName}"**.\n\nI can answer **any question** about your store, including:\n* 💰 **"Who has highest due?"** or **"How much udhar does [customer] have?"**\n* 📊 **"Show this month's collection"** or **"What is my net balance?"**\n* ⚠️ **"Who are the risky customers?"**\n* 📱 **"How do I send SMS or WhatsApp reminders?"**\n* 💵 **"Show cashbook expenses"** or **"Recent transactions"**\n\nHow can I help you right now?`,
+        suggestions: ["What is my net balance?", "Who has highest due?", "Show this month collection", "Risky customers"]
       });
     }
 
-    // 1. Check for Greeting
-    if (/^(hi|hello|hey|hola|greetings|namaste|నమస్తే|नमस्ते)/i.test(normalized)) {
+    // B. Store Name / Owner Identity
+    if (normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('my shop') || normalized.includes('my store')) {
       return res.status(200).json({
         success: true,
-        response: `Hello ${ownerName}! I am **KathaGPT** 🤖\n\nYou can ask me questions about your ledger, like:\n- "How much udhar does customer have?"\n- "Show this month collection"\n- "Who has highest due?"\n- "Who are the risky customers?"\n- "List customers with highest credit scores"`,
-        suggestions: ["How much udhar does customer have?", "Show this month collection", "Who has highest due?", "Risky customers"]
+        response: `🏪 Your registered store name is **"${storeName}"**.\n\n* **Owner:** ${ownerName}\n* **Active Customers:** ${customers.length}\n* **Total Due to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')}`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
       });
     }
-
-    // 1.5 Check for shop/owner name questions
-    if (normalized.includes('shop name') || normalized.includes('store name') || normalized.includes('my shop') || normalized.includes('my store')) {
-      return res.status(200).json({
-        success: true,
-        response: `🏪 Your shop store name is **"${storeName}"**.`,
-        suggestions: ["How much udhar does customer have?", "Show this month collection"]
-      });
-    }
-
     if (normalized.includes('my name') || normalized.includes('who am i') || normalized.includes('who i am')) {
       return res.status(200).json({
         success: true,
-        response: `👤 You are **${ownerName}**, the owner of **"${storeName}"**.`,
-        suggestions: ["How much udhar does customer have?", "Show this month collection"]
+        response: `👤 You are **${ownerName}**, the owner and manager of **"${storeName}"** on KhataPay!`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
       });
     }
 
+    // C. Specific Customer Lookup (by name or phone)
     const matchedCustomer = findMatchedCustomer(message, customers);
+    if (matchedCustomer) {
+      const isDue = matchedCustomer.balance > 0;
+      const isAdvance = matchedCustomer.balance < 0;
+      const balanceStr = isDue 
+        ? `owes you **₹${matchedCustomer.balance.toLocaleString('en-IN')}** (Udhaar)` 
+        : isAdvance 
+          ? `has an advance deposit of **₹${Math.abs(matchedCustomer.balance).toLocaleString('en-IN')}**` 
+          : `is completely settled with **₹0 balance** ✅`;
 
-    // 2. Query: Balance of a specific customer
-    if (matchedCustomer && (
-      normalized.includes('how much') || normalized.includes('balance') || normalized.includes('due') || normalized.includes('udhar') ||
-      normalized.includes('उधार') || normalized.includes('बैलेंस') || normalized.includes('बाकी') ||
-      normalized.includes('ఉధార్') || normalized.includes('బాకీ') || normalized.includes('బ్యాలెన్స్')
-    )) {
-      const predLabel = matchedCustomer.duePrediction === 'trusted' ? 'Trusted Customer ✅'
-                      : matchedCustomer.duePrediction === 'delay' ? 'Late Payer ⚠️'
-                      : 'Risky Customer 🚨';
-                      
-      let statusText = '';
-      if (matchedCustomer.balance > 0) {
-        statusText = `owes you ₹${matchedCustomer.balance.toLocaleString('en-IN')}`;
-      } else if (matchedCustomer.balance < 0) {
-        statusText = `has an advance payment of ₹${Math.abs(matchedCustomer.balance).toLocaleString('en-IN')}`;
-      } else {
-        statusText = `has all clear (₹0 balance)`;
-      }
+      const lastCustTxn = transactions.find(t => t.customer && t.customer._id.toString() === matchedCustomer._id.toString());
+      const lastTxnStr = lastCustTxn 
+        ? `* **Last Transaction:** ₹${lastCustTxn.amount} (${lastCustTxn.type === 'credit' ? 'Udhaar' : 'Payment'}) on ${new Date(lastCustTxn.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`
+        : `* **Transactions:** ${matchedCustomer.totalTransactions || 0} recorded entries`;
 
       return res.status(200).json({
         success: true,
-        response: `**${matchedCustomer.name}** ${statusText}.\n\n* **Credit Score:** ${matchedCustomer.creditScore || 750} / 900\n* **AI Status:** ${predLabel}\n* **Risk Level:** ${matchedCustomer.riskLevel.toUpperCase()}`,
-        suggestions: [`Show details for ${matchedCustomer.name}`, "Who has highest due?", "Show this month collection"]
+        response: `👤 **Customer Report: ${matchedCustomer.name}**\n\n* **Status:** ${balanceStr}\n* **Phone:** ${matchedCustomer.phone || 'Not provided'}\n* **Credit Score:** **${matchedCustomer.creditScore || 750} / 900**\n* **Risk Assessment:** **${(matchedCustomer.riskLevel || 'low').toUpperCase()}** (${matchedCustomer.duePrediction === 'trusted' ? 'Trusted Customer ✅' : matchedCustomer.duePrediction === 'delay' ? 'May Delay ⚠️' : 'High Risk 🚨'})\n${lastTxnStr}`,
+        suggestions: [`Send reminder to ${matchedCustomer.name}`, `Show details for ${matchedCustomer.name}`, "Who has highest due?"]
       });
     }
 
-    // 3. Query: This Month Collection
-    if (
-      normalized.includes('month collection') || normalized.includes('collection this month') || normalized.includes('monthly collection') ||
-      normalized.includes('महीने का कलेक्शन') || normalized.includes('महीने की वसूली') ||
-      normalized.includes('నెల కలెక్షన్') || normalized.includes('నెల వసూలు')
-    ) {
-      const startOfMonth = new Date();
-      startOfMonth.setDate(1);
-      startOfMonth.setHours(0, 0, 0, 0);
-
-      const txns = await Transaction.find({
-        owner: ownerId,
-        type: 'debit',
-        date: { $gte: startOfMonth }
-      });
-
-      const totalCollection = txns.reduce((sum, t) => sum + t.amount, 0);
+    // D. Total Udhaar / Total Due / How much to collect
+    if (normalized.includes('total due') || normalized.includes('total udhar') || normalized.includes('how much udhar') || normalized.includes('how much to collect') || normalized.includes('who owes me') || normalized.includes('total to collect') || normalized.includes('to collect') || normalized.includes('उधार') || normalized.includes('ఉధార్')) {
+      const debtors = customers.filter(c => c.balance > 0).sort((a, b) => b.balance - a.balance);
+      const topList = debtors.slice(0, 5).map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')}`).join('\n');
 
       return res.status(200).json({
         success: true,
-        response: `📈 **This Month's Collection:**\n\nYou have collected a total of **₹${totalCollection.toLocaleString('en-IN')}** from payments this month.`,
-        suggestions: ["Show today's transactions", "Who has highest due?", "Risky customers"]
+        response: `💰 **Total Udhaar (To Collect):**\n\nYou have **₹${totalUdhaar.toLocaleString('en-IN')}** to collect across **${debtors.length}** customers.\n\n**Top Customers with Outstanding Dues:**\n${topList || 'No pending dues!'}\n\n💡 *Tip: You can send instant WhatsApp or SMS reminders with payment links from the Reminders tab.*`,
+        suggestions: ["Send payment reminders", "Who has highest due?", "What is my net balance?"]
       });
     }
 
-    // 4. Query: Who has highest due?
-    if (
-      normalized.includes('highest due') || normalized.includes('highest udhar') || normalized.includes('highest balance') || normalized.includes('owes the most') ||
-      normalized.includes('सबसे ज्यादा उधार') || normalized.includes('सबसे ज्यादा बकाया') ||
-      normalized.includes('ఎక్కువ బాకీ') || normalized.includes('ఎక్కువ ఉధార్')
-    ) {
-      const sortedCustomers = [...customers].sort((a, b) => b.balance - a.balance);
-      const topCustomer = sortedCustomers[0];
+    // E. Total Jama / Advance Payments
+    if (normalized.includes('jama') || normalized.includes('advance') || normalized.includes('advance payment') || normalized.includes('जमा') || normalized.includes('జమా')) {
+      const advanceCusts = customers.filter(c => c.balance < 0);
+      return res.status(200).json({
+        success: true,
+        response: `📥 **Total Advance (Jama Received):**\n\nYou are holding **₹${totalJama.toLocaleString('en-IN')}** in advance payments from **${advanceCusts.length}** customer(s).`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
 
-      if (!topCustomer || topCustomer.balance <= 0) {
+    // F. Net Balance / Overall Store Position
+    if (normalized.includes('net balance') || normalized.includes('total balance') || normalized.includes('store position') || normalized.includes('overview') || normalized.includes('summary') || normalized.includes('ledger balance')) {
+      return res.status(200).json({
+        success: true,
+        response: `📊 **Store Financial Summary for "${storeName}":**\n\n* **Net Ledger Position:** **₹${netBalance.toLocaleString('en-IN')}**\n* **Total Udhaar (You'll Get):** ₹${totalUdhaar.toLocaleString('en-IN')} (${customersWithDues} customers)\n* **Total Advance (You'll Give):** ₹${totalJama.toLocaleString('en-IN')}\n* **Total Customers:** ${customers.length}\n* **Cash in Drawer (Cashbook Net):** ₹${netCash.toLocaleString('en-IN')}`,
+        suggestions: ["Who has highest due?", "Show this month collection", "Show cashbook expenses"]
+      });
+    }
+
+    // G. Highest Due Customer
+    if (normalized.includes('highest due') || normalized.includes('highest udhar') || normalized.includes('owes the most') || normalized.includes('maximum due') || normalized.includes('top due')) {
+      const sorted = [...customers].sort((a, b) => b.balance - a.balance);
+      const top = sorted[0];
+
+      if (!top || top.balance <= 0) {
         return res.status(200).json({
           success: true,
-          response: "No customers have outstanding dues right now! Everyone is cleared up. 🎉",
-          suggestions: ["Show this month collection", "Risky customers"]
+          response: "🎉 All customers are clear! There are zero outstanding dues right now.",
+          suggestions: ["What is my net balance?", "Show this month collection"]
         });
       }
 
       return res.status(200).json({
         success: true,
-        response: `👑 **Highest Due Customer:**\n\n**${topCustomer.name}** has the highest outstanding due of **₹${topCustomer.balance.toLocaleString('en-IN')}**.\n\n* Credit Score: ${topCustomer.creditScore || 750}\n* AI Prediction: ${topCustomer.duePrediction === 'trusted' ? 'Trusted ✅' : topCustomer.duePrediction === 'delay' ? 'Late Payer ⚠️' : 'Risky 🚨'}`,
-        suggestions: [`How much udhar does ${topCustomer.name} have?`, "Show this month collection", "Risky customers"]
+        response: `👑 **Highest Due Customer:**\n\n**${top.name}** has the highest pending due of **₹${top.balance.toLocaleString('en-IN')}**.\n\n* **Phone:** ${top.phone}\n* **Credit Score:** ${top.creditScore || 750}\n* **Risk Status:** ${(top.riskLevel || 'low').toUpperCase()}\n\nWould you like to send them an SMS or WhatsApp reminder?`,
+        suggestions: [`Send reminder to ${top.name}`, "Who are the risky customers?", "What is my net balance?"]
       });
     }
 
-    // 5. Query: Risky customers
-    if (
-      normalized.includes('risky') || normalized.includes('high risk') ||
-      normalized.includes('रिस्की') || normalized.includes('जोखिम') ||
-      normalized.includes('రిస్క్') || normalized.includes('రిస్కీ')
-    ) {
-      const risky = customers.filter(c => c.duePrediction === 'risky' || c.riskLevel === 'high');
+    // H. Risky Customers
+    if (normalized.includes('risky') || normalized.includes('high risk') || normalized.includes('late payer') || normalized.includes('bad debt') || normalized.includes('रिस्क')) {
+      const risky = customers.filter(c => c.duePrediction === 'risky' || c.riskLevel === 'high' || (c.creditScore && c.creditScore < 600));
 
       if (risky.length === 0) {
         return res.status(200).json({
           success: true,
-          response: "Great news! You have **0 High-Risk** customers right now. Everyone pays on time or has low outstanding balances. ✅",
-          suggestions: ["Show this month collection", "Who has highest due?"]
+          response: "✅ Great news! You have **0 High-Risk** customers right now. All your customers pay on time or have safe transaction limits.",
+          suggestions: ["Who has highest due?", "What is my net balance?"]
         });
       }
 
-      const listStr = risky.map((c, i) => `${i+1}. **${c.name}** - Due: ₹${c.balance.toLocaleString('en-IN')} (Score: ${c.creditScore})`).join('\n');
-
+      const list = risky.map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')} (Credit Score: ${c.creditScore || 550})`).join('\n');
       return res.status(200).json({
         success: true,
-        response: `⚠️ **Risky Customers (High Risk of Delay):**\n\nThe following customers may delay payments based on their transaction speed and history:\n\n${listStr}`,
-        suggestions: ["Show this month collection", "Who has highest due?"]
+        response: `⚠️ **Customers Requiring Attention (High Risk / Delay):**\n\n${list}\n\n💡 *Recommendation: Set shorter credit periods or require partial cash payments before giving additional stock on udhaar.*`,
+        suggestions: ["Send payment reminders", "Who has highest due?", "How to recover udhaar?"]
       });
     }
 
-    // 6. Query: Credit scores
-    if (normalized.includes('credit score') || normalized.includes('score') || normalized.includes('क्रेडिट स्कोर')) {
-      const sorted = [...customers].sort((a, b) => b.creditScore - a.creditScore);
-      const top3 = sorted.slice(0, 3);
-      const bottom3 = [...sorted].reverse().slice(0, 3);
-
-      const topStr = top3.map((c, i) => `${i+1}. **${c.name}**: ${c.creditScore}`).join('\n');
-      const bottomStr = bottom3.map((c, i) => `${i+1}. **${c.name}**: ${c.creditScore}`).join('\n');
+    // I. Credit Scores
+    if (normalized.includes('credit score') || normalized.includes('score') || normalized.includes('trust score')) {
+      const sorted = [...customers].sort((a, b) => (b.creditScore || 750) - (a.creditScore || 750));
+      const top3 = sorted.slice(0, 3).map((c, i) => `${i + 1}. **${c.name}**: ${c.creditScore || 750} / 900 ⭐`).join('\n');
+      const bottom3 = [...sorted].reverse().slice(0, 3).map((c, i) => `${i + 1}. **${c.name}**: ${c.creditScore || 750} / 900`).join('\n');
 
       return res.status(200).json({
         success: true,
-        response: `📊 **Customer Credit Scores Overview:**\n\n**Top Rated (Trusted) Customers:**\n${topStr}\n\n**Needs Attention (Risky/Late):**\n${bottomStr}`,
-        suggestions: ["Risky customers", "Who has highest due?", "Show this month collection"]
+        response: `📊 **Customer Credit Score Ratings (300 - 900):**\n\n**Top Rated (Most Trusted):**\n${top3 || 'None'}\n\n**Lowest Rated (High Delay Risk):**\n${bottom3 || 'None'}\n\n*Scores are automatically calculated based on on-time repayment history and overdue delays.*`,
+        suggestions: ["Risky customers", "Who has highest due?", "What is my net balance?"]
       });
     }
 
-    // 7. Query: Today's transactions
+    // J. Recent Transactions / Last Transaction / Payment
+    if (normalized.includes('last transaction') || normalized.includes('recent transaction') || normalized.includes('recent payment') || normalized.includes('last payment') || normalized.includes('who paid') || normalized.includes('recent entry')) {
+      if (transactions.length === 0) {
+        return res.status(200).json({
+          success: true,
+          response: "You don't have any recorded transactions yet. Click '+ Add Customer' or 'You Gave (Udhaar)' to get started!",
+          suggestions: ["What is my net balance?", "How to add transaction?"]
+        });
+      }
+
+      const top5 = transactions.slice(0, 5).map((t, i) => {
+        const dateStr = new Date(t.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        const typeStr = t.type === 'credit' ? '🔴 Udhaar (Gave)' : '🟢 Jama (Got)';
+        return `${i + 1}. **${t.customer ? t.customer.name : 'Unknown'}**: ${typeStr} **₹${t.amount.toLocaleString('en-IN')}** on ${dateStr} (${t.paymentMode || 'cash'})`;
+      }).join('\n');
+
+      return res.status(200).json({
+        success: true,
+        response: `📝 **Recent Ledger Activity:**\n\n${top5}`,
+        suggestions: ["Show today's transactions", "Show this month collection", "What is my net balance?"]
+      });
+    }
+
+    // K. Today's Transactions
     if (normalized.includes('today') || normalized.includes('आज') || normalized.includes('ఈరోజు')) {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
-      const txns = await Transaction.find({
-        owner: ownerId,
-        date: { $gte: startOfToday }
-      }).populate('customer', 'name');
+      const todayTxns = transactions.filter(t => new Date(t.date) >= startOfToday);
+      const todayGot = todayTxns.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0);
+      const todayGave = todayTxns.filter(t => t.type === 'credit').reduce((s, t) => s + t.amount, 0);
 
-      if (txns.length === 0) {
+      if (todayTxns.length === 0) {
         return res.status(200).json({
           success: true,
-          response: "You haven't recorded any transactions yet today. 🗓️",
-          suggestions: ["Show this month collection", "Who has highest due?"]
+          response: "🗓️ No transactions have been recorded today yet.",
+          suggestions: ["Show recent transactions", "Show this month collection", "What is my net balance?"]
         });
       }
 
-      const txnsList = txns.map((t, i) => `${i+1}. **${t.customer ? t.customer.name : 'Unknown'}**: ${t.type === 'credit' ? 'Got Udhaar' : 'Paid Back'} ₹${t.amount} (${t.description || 'No desc'})`).join('\n');
-
       return res.status(200).json({
         success: true,
-        response: `📅 **Today's Transactions:**\n\n${txnsList}`,
-        suggestions: ["Show this month collection", "Who has highest due?"]
+        response: `📅 **Today's Activity Summary:**\n\n* **Total Collected (Jama):** **₹${todayGot.toLocaleString('en-IN')}**\n* **Total Credit Given (Udhaar):** **₹${todayGave.toLocaleString('en-IN')}**\n* **Total Entries:** ${todayTxns.length} transaction(s)`,
+        suggestions: ["Show recent transactions", "Show this month collection", "What is my net balance?"]
       });
     }
 
+    // L. This Month's Collection
+    if (normalized.includes('month collection') || normalized.includes('monthly collection') || normalized.includes('this month') || normalized.includes('महीना') || normalized.includes('నెల')) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+
+      const monthTxns = await Transaction.find({
+        owner: ownerId,
+        type: 'debit',
+        date: { $gte: startOfMonth }
+      });
+      const monthTotal = monthTxns.reduce((s, t) => s + t.amount, 0);
+
+      return res.status(200).json({
+        success: true,
+        response: `📈 **This Month's Collections:**\n\nYou have collected **₹${monthTotal.toLocaleString('en-IN')}** across **${monthTxns.length}** payments this calendar month.`,
+        suggestions: ["What is my net balance?", "Who has highest due?", "Show cashbook expenses"]
+      });
+    }
+
+    // M. Cashbook / Expenses / Drawer Cash
+    if (normalized.includes('cashbook') || normalized.includes('expense') || normalized.includes('expenses') || normalized.includes('income') || normalized.includes('cash in') || normalized.includes('cash out') || normalized.includes('petty cash')) {
+      const topExpenses = cashbookEntries.filter(e => e.type === 'out').slice(0, 4)
+        .map(e => `* **${e.category}:** ₹${e.amount} (${e.description || 'No note'})`).join('\n');
+
+      return res.status(200).json({
+        success: true,
+        response: `💵 **Cashbook (Shop Income & Expenses):**\n\n* **Total Cash In:** ₹${totalCashIn.toLocaleString('en-IN')}\n* **Total Cash Out (Expenses):** ₹${totalCashOut.toLocaleString('en-IN')}\n* **Net Cash in Drawer:** **₹${netCash.toLocaleString('en-IN')}**\n\n**Recent Expenses:**\n${topExpenses || 'No recent expenses recorded.'}`,
+        suggestions: ["What is my net balance?", "Show this month collection"]
+      });
+    }
+
+    // N. How to send SMS / WhatsApp Reminders
+    if (normalized.includes('sms') || normalized.includes('whatsapp') || normalized.includes('reminder') || normalized.includes('reminders') || normalized.includes('send reminder')) {
+      return res.status(200).json({
+        success: true,
+        response: `📲 **How to Send Payment Reminders on KhataPay:**\n\n1. **Via Reminders Page:** Click **"Reminders"** in the sidebar. You'll see all customers with pending dues and automated overdue alerts.\n2. **Via Customer Page:** Open any customer's profile, click **"Send SMS"** or **"Send WhatsApp"**.\n3. **Automated Payment Link:** KhataPay includes an instant verified UPI link (\`https://udharapp.vercel.app/pay/:customerId\`) with QR code.\n4. **Delivery Modes:**\n   * **Cloud Gateway:** Direct delivery via Fast2SMS.\n   * **Phone App:** Opens directly in your device's SMS or WhatsApp app with pre-filled professional text.`,
+        suggestions: ["Who has highest due?", "How does online payment work?", "What is my net balance?"]
+      });
+    }
+
+    // O. Online Payments / UPI / Checkout Link
+    if (normalized.includes('upi') || normalized.includes('qr') || normalized.includes('online payment') || normalized.includes('payment link') || normalized.includes('checkout') || normalized.includes('utr')) {
+      return res.status(200).json({
+        success: true,
+        response: `💳 **How KhataPay UPI Checkout Works:**\n\n1. Every customer has a unique verified payment page: \`https://udharapp.vercel.app/pay/:customerId\`.\n2. When they click the link, they see your store name (**"${storeName}"**), balance, and a dynamic UPI QR code.\n3. They scan & pay using **GPay, PhonePe, Paytm, or BHIM**.\n4. After paying, they enter their 12-digit **UTR number** to confirm.\n5. The transaction updates your ledger instantly, and the Soundbox chimes!`,
+        suggestions: ["How to send payment reminder?", "What is soundbox?", "What is my net balance?"]
+      });
+    }
+
+    // P. Soundbox / Audio alerts
+    if (normalized.includes('soundbox') || normalized.includes('voice') || normalized.includes('audio') || normalized.includes('chime') || normalized.includes('speaker')) {
+      return res.status(200).json({
+        success: true,
+        response: `🔊 **KhataPay Instant Soundbox:**\n\nKhataPay features a built-in virtual soundbox that announces payment collections in real-time.\n\n* **To Enable/Mute:** Click the **Speaker icon** in the top navigation bar.\n* When active, an audio chime sounds whenever payment is recorded or verified.`,
+        suggestions: ["How does online payment work?", "What is my net balance?"]
+      });
+    }
+
+    // Q. How to Export CSV / Reports / Data Backup
+    if (normalized.includes('export') || normalized.includes('csv') || normalized.includes('excel') || normalized.includes('download') || normalized.includes('backup') || normalized.includes('report')) {
+      return res.status(200).json({
+        success: true,
+        response: `📊 **Exporting Reports & Data in KhataPay:**\n\n* **Customer Ledger CSV:** Go to **Customers** and click **"Export CSV"** in the top-right to download an instant spreadsheet of all customer names, phone numbers, balances, and risk levels.\n* **Quick Actions:** Click **"Export CSV"** directly in the Dashboard Quick Actions hub.\n* **Backup:** Click **"Backup"** in Quick Actions or Settings to create a local ledger snapshot.`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+
+    // R. Business Advice: How to recover debt / Udhaar management tips
+    if (normalized.includes('recover') || normalized.includes('collect debt') || normalized.includes('bad debt') || normalized.includes('advice') || normalized.includes('tips') || normalized.includes('profit') || normalized.includes('margin') || normalized.includes('credit policy')) {
+      return res.status(200).json({
+        success: true,
+        response: `💡 **Proven Shopkeeper Rules to Avoid Bad Debts & Recover Udhaar:**\n\n1. **Set Hard Credit Limits:** Never allow any single customer's due to exceed 10-15% of your daily sales volume.\n2. **Send 3-Day Prior Reminders:** Use KhataPay's friendly SMS reminder before the due date, not just when overdue.\n3. **Partial Settlements First:** If a customer can't pay ₹2,000, ask for ₹500 today. Partial payments build repayment discipline.\n4. **Reward Fast Payers:** Give small perks or discounts to customers who maintain an **800+ credit score**.\n5. **Cash on Hand:** Always record your daily petty expenses in the **Cashbook** to track true net profit margins.`,
+        suggestions: ["Risky customers", "Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // S. General Answer (Helpful, complete fallback that NEVER rejects)
     return res.status(200).json({
       success: true,
-      response: "I'm not sure how to answer that question. 😅\n\nYou can ask me things like:\n* \"How much udhar does customer have?\"\n* \"Show this month collection\"\n* \"Who has highest due?\"\n* \"Who is risky?\"\n* \"What is the credit score of Suresh?\"",
-      suggestions: ["How much udhar does customer have?", "Show this month collection", "Who has highest due?", "Risky customers"]
+      response: `I'm here to help with all questions about **"${storeName}"**!\n\nHere is a quick snapshot of your business right now:\n* 💰 **Udhaar to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')} (${customersWithDues} customers)\n* 💵 **Advance Received:** ₹${totalJama.toLocaleString('en-IN')}\n* 📊 **Net Position:** **₹${netBalance.toLocaleString('en-IN')}**\n* 👥 **Total Customers:** ${customers.length}\n* 📥 **Cash in Drawer:** ₹${netCash.toLocaleString('en-IN')}\n\nYou can ask me specific questions like:\n* *"How much does [Customer Name] owe?"*\n* *"Who are my top 3 highest due customers?"*\n* *"How do I send an SMS reminder with a UPI link?"*\n* *"What were my cashbook expenses?"*`,
+      suggestions: ["What is my net balance?", "Who has highest due?", "Show this month collection", "Risky customers"]
     });
   } catch (error) {
     next(error);

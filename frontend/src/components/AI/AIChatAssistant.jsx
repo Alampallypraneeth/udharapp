@@ -33,12 +33,13 @@ const AIChatAssistant = () => {
       {
         id: 'welcome',
         sender: 'ai',
-        text: 'Hello! I am KathaGPT. 🤖\n\nYou can ask me questions about your ledger, like:',
+        text: 'Hello! I am **KhataBot** 🤖, your KhataPay AI assistant.\n\nAsk me **any question** about your customers, ledger, cashbook, or store finances:',
         suggestions: [
-          `How much udhar does customer have?`,
-          'Show this month collection',
+          'What is my net balance?',
           'Who has highest due?',
-          'Who are the risky customers?'
+          'Show this month collection',
+          'Who are the risky customers?',
+          'How to send payment reminder?'
         ],
         time: new Date()
       }
@@ -148,11 +149,11 @@ const AIChatAssistant = () => {
       setMessages(prev => [...prev, aiMsg]);
     } catch (err) {
       setIsOnline(false);
-      toast.error('KathaGPT is currently offline');
+      toast.error('KhataBot is reconnecting...');
       const errorMsg = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: 'Sorry, I am having trouble connecting right now. Please try again later.',
+        text: 'Sorry, I am having trouble connecting right now. Please try again in a moment.',
         time: new Date()
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -220,15 +221,16 @@ const AIChatAssistant = () => {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-tr from-orange to-orange-hover hover:from-orange-hover hover:to-orange text-pure-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all hover:scale-105 border-none cursor-pointer group"
-        title="KathaGPT"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-tr from-[#0A1128] via-[#0F172A] to-[#1E3A8A] text-pure-white rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all hover:scale-105 border border-white/15 cursor-pointer group"
+        title="KhataBot - AI Store Assistant"
         id="ai-chat-btn"
       >
         {isOpen ? (
           <HiOutlineX size={26} className="animate-in spin-in-90 duration-200" />
         ) : (
           <div className="relative">
-            <HiOutlineChatAlt2 size={26} className="group-hover:scale-110 transition-transform" />
+            <HiOutlineChatAlt2 size={26} className="group-hover:scale-110 transition-transform text-white" />
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-blue-400 rounded-full animate-ping" />
           </div>
         )}
       </button>
@@ -242,14 +244,20 @@ const AIChatAssistant = () => {
           {/* Chat Window */}
           <div className="relative w-full max-w-md h-full bg-pure-white shadow-2xl flex flex-col z-50 animate-in slide-in-from-right duration-300">
             {/* Header */}
-            <div className="px-5 py-4 bg-[#0f172a] text-pure-white flex items-center justify-between shadow-md border-b border-soft-gray/10">
+            <div className="px-5 py-4 bg-[#0A1128] text-pure-white flex items-center justify-between shadow-md border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-orange/20 border border-orange/30 flex items-center justify-center text-orange">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400">
                   <HiOutlineSparkles size={20} className="animate-pulse" />
                 </div>
                 <div>
-                  <span className="text-sm font-bold m-0 flex items-center gap-1.5 text-pure-white" style={{ color: '#ffffff' }}>
-                    KathaGPT
+                  <div className="text-sm font-bold m-0 flex items-center gap-2 text-pure-white leading-tight" style={{ color: '#ffffff' }}>
+                    <span>Khata<span className="text-blue-400">Bot</span></span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.2 rounded">
+                      AI Assistant
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-300/80 block mt-0.5">
+                    Answers all ledger & store questions
                   </span>
                 </div>
               </div>
@@ -271,7 +279,7 @@ const AIChatAssistant = () => {
                     <div className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-xs border transition-all ${
                       isAI 
                         ? 'bg-gradient-to-br from-pure-white to-light-cream border-soft-gray/40 rounded-tl-none text-deep-navy' 
-                        : 'bg-gradient-to-br from-orange to-orange-hover text-pure-white border-transparent rounded-tr-none'
+                        : 'bg-gradient-to-br from-[#0A1128] via-[#0F172A] to-[#1E3A8A] text-pure-white border-transparent rounded-tr-none shadow-sm'
                     }`}>
                       {isAI ? (
                         <div className="space-y-1">
@@ -293,9 +301,9 @@ const AIChatAssistant = () => {
                           <button
                             key={idx}
                             onClick={() => handleSuggestionClick(suggestion)}
-                            className="px-3 py-1.5 bg-pure-white hover:bg-orange/5 text-orange hover:text-orange-hover border border-orange/20 rounded-full text-[10px] font-bold transition-all cursor-pointer shadow-2xs inline-flex items-center gap-1 hover:-translate-y-0.5"
+                            className="px-3 py-1.5 bg-pure-white hover:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:text-blue-700 border border-blue-500/25 hover:border-blue-500/50 rounded-full text-[10px] font-bold transition-all cursor-pointer shadow-2xs inline-flex items-center gap-1 hover:-translate-y-0.5"
                           >
-                            <HiOutlineLightBulb size={12} className="shrink-0" />
+                            <HiOutlineLightBulb size={12} className="shrink-0 text-amber-500" />
                             {suggestion}
                           </button>
                         ))}
@@ -327,7 +335,7 @@ const AIChatAssistant = () => {
                 <div className="flex items-center gap-2 px-3.5 py-2 bg-red-give/10 border border-red-give/20 rounded-xl animate-pulse">
                   <span className="w-2.5 h-2.5 bg-red-give rounded-full animate-ping" />
                   <span className="text-[10px] font-black text-red-give tracking-wider uppercase">
-                    {speechLang === 'hi-IN' ? 'सुन रहा हूँ... बोलिए' : speechLang === 'te-IN' ? 'వింటున్నాను... మాట్లాడండి' : 'KathaGPT is Listening... Speak Now'}
+                    {speechLang === 'hi-IN' ? 'सुन रहा हूँ... बोलिए' : speechLang === 'te-IN' ? 'వింటున్నాను... మాట్లాడండి' : 'KhataBot is Listening... Speak Now'}
                   </span>
                 </div>
               )}
