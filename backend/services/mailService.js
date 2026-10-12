@@ -42,7 +42,7 @@ const sendEmail = async ({ to, subject, text, html, attachments }) => {
 
   // Send mail
   const info = await transporter.sendMail({
-    from: `"${process.env.APP_NAME || 'Digital Udhaar'}" <${fromEmail}>`,
+    from: `"${process.env.APP_NAME || 'VyaparFlow'}" <${fromEmail}>`,
     to,
     subject,
     text,

@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend for Digital Udhaar Khata - Kirana store credit ledger",
+  "description": "Backend API for VyaparFlow - Smart Business & Credit Flow Ledger",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

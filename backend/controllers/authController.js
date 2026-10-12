@@ -288,21 +288,21 @@ const forgotPassword = async (req, res, next) => {
       <body>
         <div class="container">
           <div class="logo-container">
-            <span class="logo">Digital Udhaar</span>
+            <span class="logo">VyaparFlow</span>
           </div>
           <h1 class="title">Reset Your Password</h1>
           <p class="text">Hello ${user.name},</p>
-          <p class="text">You requested a password reset for your Digital Udhaar account. Click the button below to choose a new password:</p>
+          <p class="text">You requested a password reset for your VyaparFlow account. Click the button below to choose a new password:</p>
           <div class="btn-container">
             <a href="${resetUrl}" class="btn" target="_blank">Reset Password</a>
           </div>
           <p class="text">This link is valid for 10 minutes. If you did not request this password reset, please ignore this email and your password will remain unchanged.</p>
           <div class="link-text">
             <strong>If the button above does not work, copy and paste this URL into your browser:</strong><br/>
-            <span style="color: #ea580c;">${resetUrl}</span>
+            <span style="color: #059669;">${resetUrl}</span>
           </div>
         </div>
-        <div class="footer">Digital Udhaar &copy; 2026. All rights reserved.</div>
+        <div class="footer">VyaparFlow &copy; 2026. All rights reserved.</div>
       </body>
       </html>
     `;
@@ -311,20 +311,20 @@ const forgotPassword = async (req, res, next) => {
     const textMessage = `
 Hello ${user.name},
 
-You requested a password reset for your Digital Udhaar account.
+You requested a password reset for your VyaparFlow account.
 Please visit the following link to reset your password (valid for 10 minutes):
 
 ${resetUrl}
 
 If you did not request this password reset, please ignore this email.
 
-Digital Udhaar Team
+VyaparFlow Team
     `;
 
     try {
       const result = await sendEmail({
         to: user.email,
-        subject: 'Password Reset Request - Digital Udhaar',
+        subject: 'Password Reset Request - VyaparFlow',
         text: textMessage,
         html: htmlMessage,
       });

@@ -19,6 +19,8 @@ import {
 } from 'react-icons/hi';
 import { FaWhatsapp, FaSms, FaMobileAlt, FaPhone } from 'react-icons/fa';
 import { useSpeechToText } from '../hooks/useSpeechToText';
+import { exportCustomerLedgerCSV } from '../utils/exportCsv';
+import { playPaymentSuccessChime } from '../utils/soundbox';
 
 const defaultUserSvg = `
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -275,6 +277,9 @@ const CustomerDetailPage = () => {
         paymentMode: txnForm.paymentMode,
         billImageUrl: billImageBase64,
       });
+      if (txnType === 'debit') {
+        playPaymentSuccessChime();
+      }
       toast.success(txnType === 'credit' ? t('udhaarRecorded') : t('paymentRecorded'));
       setShowTxnModal(false);
       setTxnForm({ amount: '', description: '', date: new Date().toISOString().split('T')[0], paymentMode: 'cash' });
@@ -337,6 +342,7 @@ const CustomerDetailPage = () => {
   const handleSettle = async (txnId) => {
     try {
       await API.put(`/transactions/${txnId}/settle`);
+      playPaymentSuccessChime();
       toast.success(t('transactionMarkedAsPaid'));
       fetchData();
     } catch (err) { toast.error('Failed'); }
@@ -345,6 +351,7 @@ const CustomerDetailPage = () => {
   const handleApprovePayment = async (txnId) => {
     try {
       await API.put(`/transactions/${txnId}/approve`);
+      playPaymentSuccessChime();
       toast.success('UPI Payment Approved & Ledger Settled!');
       fetchData();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to approve payment'); }
@@ -536,9 +543,16 @@ const CustomerDetailPage = () => {
           </div>
           <div className="flex flex-col gap-2 pt-3 border-t border-soft-gray/50">
 
-            <div className="flex gap-2 w-full">
+            <div className="flex gap-2 w-full flex-wrap">
+              <button 
+                className="flex-1 py-2.5 bg-pure-white hover:bg-slate-gray/5 text-slate-gray border border-soft-gray font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs" 
+                onClick={() => exportCustomerLedgerCSV(customer, transactions)}
+                title="Download formatted CSV spreadsheet"
+              >
+                Export CSV
+              </button>
               <button className="flex-1 py-2.5 bg-transparent hover:bg-slate-gray/5 text-slate-gray border border-soft-gray font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={handleViewPDF}>
-                View Statement
+                View PDF
               </button>
               <button className="flex-1 py-2.5 bg-transparent hover:bg-slate-gray/5 text-slate-gray border border-soft-gray font-semibold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={handleDownloadPDF}>
                 <HiOutlineDocumentDownload size={14} /> Download PDF
@@ -819,6 +833,28 @@ const CustomerDetailPage = () => {
                 placeholder="0.00" 
                 autoFocus 
               />
+            </div>
+            {/* Quick Calculator Preset Chips */}
+            <div className="flex gap-1.5 flex-wrap pt-1.5">
+              {[100, 500, 1000, 2000, 5000].map(val => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setTxnForm(prev => ({ ...prev, amount: ((parseFloat(prev.amount) || 0) + val).toString() }))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-emerald-500/10 hover:text-emerald-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
+                >
+                  +₹{val}
+                </button>
+              ))}
+              {customer?.balance > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setTxnForm(prev => ({ ...prev, amount: customer.balance.toString() }))}
+                  className="px-2.5 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg cursor-pointer transition-colors"
+                >
+                  Full Balance (₹{customer.balance})
+                </button>
+              )}
             </div>
           </div>
           <div className="space-y-1.5">

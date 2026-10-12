@@ -1,43 +1,47 @@
 @import "tailwindcss";
 
 :root {
-  --bg-main: #F9FAFB;
+  --bg-main: #F8FAFC;
   --bg-card: #FFFFFF;
   --bg-sidebar: #FFFFFF;
-  --bg-header: rgba(249, 250, 251, 0.8);
-  --border-main: #E5E7EB;
-  --text-main: #111827;
-  --text-muted: #6B7280;
+  --bg-header: rgba(248, 250, 252, 0.85);
+  --border-main: #E2E8F0;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
   --bg-input: #FFFFFF;
   --bg-soft-white: #FFFFFF;
-  --bg-light-cream: #F3F4F6;
+  --bg-light-cream: #F1F5F9;
   --bg-pure-white: #FFFFFF;
-  --color-glass: rgba(255, 255, 255, 0.7);
-  --shadow-color: rgba(0, 0, 0, 0.02);
+  --color-glass: rgba(255, 255, 255, 0.75);
+  --shadow-color: rgba(15, 23, 42, 0.04);
   
-  /* Monochromatic primary color tokens - Light Mode */
-  --color-primary: #111827; /* slate-900 */
-  --color-primary-hover: #1F2937; /* slate-800 */
+  /* VyaparFlow Emerald Primary Palette - Light Mode */
+  --color-primary: #059669; /* Emerald 600 */
+  --color-primary-hover: #047857; /* Emerald 700 */
+  --color-accent: #10B981; /* Emerald 500 */
+  --color-gold: #F59E0B;
 }
 
 .dark {
-  --bg-main: #0A0B0D;
-  --bg-card: #121316;
-  --bg-sidebar: #0E0F12;
-  --bg-header: rgba(10, 11, 13, 0.8);
-  --border-main: #1E2025;
-  --text-main: #F3F4F6;
-  --text-muted: #9CA3AF;
-  --bg-input: #121316;
-  --bg-soft-white: #121316;
-  --bg-light-cream: #1C1D21;
-  --bg-pure-white: #1E2025;
-  --color-glass: rgba(18, 19, 22, 0.7);
-  --shadow-color: rgba(0, 0, 0, 0.4);
+  --bg-main: #0B0F17; /* Deep Obsidian Slate */
+  --bg-card: #111827; /* Rich Charcoal */
+  --bg-sidebar: #0D121F;
+  --bg-header: rgba(11, 15, 23, 0.85);
+  --border-main: #1E293B;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --bg-input: #111827;
+  --bg-soft-white: #111827;
+  --bg-light-cream: #1E293B;
+  --bg-pure-white: #162032;
+  --color-glass: rgba(17, 24, 39, 0.75);
+  --shadow-color: rgba(0, 0, 0, 0.5);
   
-  /* Monochromatic primary color tokens - Dark Mode */
-  --color-primary: #F9FAFB; /* slate-50 */
-  --color-primary-hover: #E5E7EB; /* slate-200 */
+  /* VyaparFlow Emerald Primary Palette - Dark Mode */
+  --color-primary: #10B981; /* Emerald 500 */
+  --color-primary-hover: #34D399; /* Emerald 400 */
+  --color-accent: #059669;
+  --color-gold: #FBBF24;
 }
 
 @theme {
@@ -50,16 +54,16 @@
   --color-soft-gray: var(--border-main);
   --color-pure-white: var(--bg-pure-white);
   
-  --color-premium-dark: #0A0B0D;
+  --color-premium-dark: #0B0F17;
+  --color-emerald-brand: var(--color-primary);
   
   --color-green-get: #10B981;
-  --color-red-give: #EF4444;
+  --color-red-give: #F43F5E;
   --color-warning-pending: #F59E0B;
-  --color-info-analytics: #6366F1;
+  --color-info-analytics: #3B82F6;
   
-  --color-orange-hover: var(--color-primary-hover);
   --color-green-hover: #059669;
-  --color-red-hover: #DC2626;
+  --color-red-hover: #E11D48;
 }
 
 body {
@@ -73,10 +77,10 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Outfit', sans-serif;
   color: var(--text-main);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
-/* Custom ultra-minimal scrollbars for modern web experience */
+/* Custom ultra-minimal scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -99,10 +103,10 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px var(--border-main) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
-/* Smooth Transition class for premium theme toggle */
+/* Smooth Transition class for theme toggle */
 body, header, aside, tr, td, th, input, select, textarea, button, 
 .bg-pure-white, .bg-soft-white, .bg-light-cream, .border-soft-gray, .text-deep-navy, .text-slate-gray {
   transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -115,14 +119,25 @@ body, header, aside, tr, td, th, input, select, textarea, button,
 .minimal-card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-main);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px var(--shadow-color);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px var(--shadow-color);
 }
 
 .hover-lift {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hover-lift:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 4px 12px var(--shadow-color);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px var(--shadow-color);
+}
+
+/* Fintech Badge and Glass styling */
+.glass-pill {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.emerald-gradient {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
 }

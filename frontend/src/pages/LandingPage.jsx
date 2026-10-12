@@ -27,14 +27,16 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFF8F2] to-[#F8F7F5] text-deep-navy font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#F0FDF4] via-[#F8FAFC] to-[#ECFDF5] text-deep-navy font-sans">
       {/* Header / Navbar */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-pure-white/80 backdrop-blur-md border-b border-soft-gray px-8 md:px-16 flex items-center justify-between z-40">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
           <div className="w-10 h-10 rounded-xl bg-pure-white border border-soft-gray flex items-center justify-center p-1.5 shadow-sm">
-            <Logo />
+            <Logo size="100%" />
           </div>
-          <span className="text-lg font-bold text-deep-navy font-outfit">Udhaar Khata</span>
+          <span className="text-xl font-black text-deep-navy font-outfit tracking-tight">
+            Vyapar<span className="text-emerald-500">Flow</span>
+          </span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -43,7 +45,7 @@ const LandingPage = () => {
             <span>+91 98765 43210</span>
           </a>
           <button 
-            className="px-6 py-2.5 bg-orange text-pure-white hover:bg-orange-hover font-semibold text-sm rounded-lg transition-colors shadow-sm cursor-pointer border-none" 
+            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer border-none" 
             onClick={() => navigate('/login')}
           >
             Log In
@@ -54,13 +56,17 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-8 md:px-16 pt-32 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
-          <h1 className="text-5xl md:text-6xl font-extrabold text-deep-navy leading-[1.1] font-outfit">
-            Business hua <br />
-            <span className="text-orange">easy</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-semibold text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            Next-Gen Merchant Credit OS
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-deep-navy leading-[1.1] font-outfit tracking-tight">
+            Smart Vyapar, <br />
+            <span className="text-emerald-600">Zero Due Losses</span>
           </h1>
-          <h2 className="text-xl md:text-2xl font-bold text-deep-navy/80 font-outfit">with Udhaar Khata on Desktop</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-deep-navy/80 font-outfit">with VyaparFlow Intelligent Ledger</h2>
           <p className="text-base text-slate-gray leading-relaxed max-w-lg">
-            Manage udhaar, track payments and grow your business — all in one place.
+            Track customer credit, automate WhatsApp payment reminders, and settle balances instantly with verified UPI payment links.
           </p>
           
           <form className="flex flex-col sm:flex-row gap-3 max-w-md" onSubmit={handleGetStarted}>
@@ -221,7 +227,7 @@ const LandingPage = () => {
               <HiOutlineDocumentText size={24} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-deep-navy">Digital Udhaar Register</h4>
+              <h4 className="text-base font-bold text-deep-navy">VyaparFlow Digital Ledger</h4>
               <p className="text-xs text-slate-gray leading-relaxed">Maintain all your credit and debit records digitally in one place.</p>
             </div>
           </div>

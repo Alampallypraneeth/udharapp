@@ -15,9 +15,11 @@ import {
   HiOutlineMicrophone, HiOutlineUser, HiOutlineX,
   HiOutlineSearch, HiOutlineFilter, HiOutlinePlus,
   HiOutlineDotsVertical, HiOutlineDocumentText, HiOutlineDatabase,
-  HiOutlineCog, HiOutlineBell, HiOutlineUserAdd
+  HiOutlineCog, HiOutlineBell, HiOutlineUserAdd, HiOutlineDownload
 } from 'react-icons/hi';
 import { FaWhatsapp, FaSms, FaMobileAlt, FaPhone } from 'react-icons/fa';
+import DueBadge from '../components/Common/DueBadge';
+import { exportAllCustomersCSV } from '../utils/exportCsv';
 
 const defaultUserSvg = `
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -483,13 +485,7 @@ const DashboardPage = () => {
                               ₹{Math.abs(c.balance).toLocaleString('en-IN')}
                             </td>
                             <td className="px-4 py-3 text-xs">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                                c.duePrediction === 'trusted' ? 'bg-green-get/10 text-green-get' :
-                                c.duePrediction === 'delay' ? 'bg-warning-pending/10 text-warning-pending' :
-                                'bg-red-give/10 text-red-give'
-                              }`}>
-                                {c.duePrediction === 'trusted' ? 'Trusted' : c.duePrediction === 'delay' ? 'Delay' : 'Risky'}
-                              </span>
+                              <DueBadge customer={c} />
                             </td>
                             <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                               <button className="p-1 hover:bg-slate-gray/10 text-slate-gray hover:text-deep-navy rounded-lg border-none cursor-pointer">
@@ -812,6 +808,16 @@ const DashboardPage = () => {
                   <HiOutlineBell />
                 </div>
                 <span>Reminders</span>
+              </button>
+              <button 
+                onClick={() => exportAllCustomersCSV(customers)}
+                className="p-4 bg-pure-white border border-soft-gray rounded-xl flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:border-emerald-500 hover:shadow-xs hover:-translate-y-0.5 transition-all text-deep-navy font-semibold text-xs"
+                title="Download CSV spreadsheet report of all customers"
+              >
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-lg">
+                  <HiOutlineDownload />
+                </div>
+                <span>Export CSV</span>
               </button>
               <button 
                 onClick={handleBackup}

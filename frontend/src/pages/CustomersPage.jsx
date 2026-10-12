@@ -9,9 +9,12 @@ import ConfirmDialog from '../components/Common/ConfirmDialog';
 import { useLanguage } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { HiOutlinePlus, HiOutlineSearch, HiOutlineTrash, HiOutlineMicrophone, HiOutlineX, HiOutlineCheckCircle, HiOutlineExclamation, HiOutlineClock, HiOutlineMail, HiOutlineArrowUp, HiOutlineArrowDown } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlineSearch, HiOutlineTrash, HiOutlineMicrophone, HiOutlineX, HiOutlineCheckCircle, HiOutlineExclamation, HiOutlineClock, HiOutlineMail, HiOutlineArrowUp, HiOutlineArrowDown, HiOutlineDownload } from 'react-icons/hi';
 import { FaWhatsapp, FaSms, FaMobileAlt, FaPhone } from 'react-icons/fa';
 import { useSpeechToText } from '../hooks/useSpeechToText';
+import DueBadge from '../components/Common/DueBadge';
+import { exportAllCustomersCSV } from '../utils/exportCsv';
+import { playPaymentSuccessChime } from '../utils/soundbox';
 
 const defaultUserSvg = `
 <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -108,6 +111,9 @@ const CustomersPage = () => {
         date: quickForm.date ? new Date(quickForm.date).toISOString() : new Date().toISOString(),
         paymentMode: quickTxn.type === 'debit' ? quickForm.paymentMode : 'none',
       });
+      if (quickTxn.type === 'debit') {
+        playPaymentSuccessChime();
+      }
       toast.success(quickTxn.type === 'credit' ? `Udhaar recorded for ${quickTxn.customer.name}!` : `Payment received from ${quickTxn.customer.name}!`);
       setQuickTxn(null);
       fetchCustomers();
@@ -226,12 +232,21 @@ const CustomersPage = () => {
             </button>
           )}
         </div>
-        <button 
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-hover text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-sm hover:shadow" 
-          onClick={() => setShowForm(true)}
-        >
-          <HiOutlinePlus size={16} /> {t('addCustomer')}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-pure-white border border-soft-gray hover:bg-light-cream text-deep-navy rounded-xl text-sm font-semibold cursor-pointer transition-all shadow-2xs" 
+            onClick={() => exportAllCustomersCSV(customers)}
+            title="Download CSV spreadsheet report of all customers"
+          >
+            <HiOutlineDownload size={16} className="text-emerald-600" /> Export CSV
+          </button>
+          <button 
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-orange hover:bg-orange-hover text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-sm hover:shadow" 
+            onClick={() => setShowForm(true)}
+          >
+            <HiOutlinePlus size={16} /> {t('addCustomer')}
+          </button>
+        </div>
       </div>
 
       {customers.length === 0 ? (
@@ -351,13 +366,7 @@ const CustomersPage = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm align-middle">
-                    {c.balance > 0 ? (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-red-give/10 text-red-give">{t('due')}</span>
-                    ) : c.balance < 0 ? (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-get/10 text-green-get">{t('advance')}</span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-get/10 text-green-get">{t('clear')}</span>
-                    )}
+                    <DueBadge customer={c} />
                   </td>
                   <td className="px-6 py-4 text-sm align-middle">
                     <div className="flex items-center gap-1.5">
@@ -523,6 +532,28 @@ const CustomersPage = () => {
                   onChange={(e) => setQuickForm({ ...quickForm, amount: e.target.value })}
                   placeholder="0.00"
                 />
+              </div>
+              {/* Quick Calculator Preset Chips */}
+              <div className="flex gap-1.5 flex-wrap pt-1.5">
+                {[100, 500, 1000, 2000].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setQuickForm(prev => ({ ...prev, amount: ((parseFloat(prev.amount) || 0) + val).toString() }))}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-emerald-500/10 hover:text-emerald-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
+                  >
+                    +₹{val}
+                  </button>
+                ))}
+                {quickTxn.customer.balance > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickForm(prev => ({ ...prev, amount: quickTxn.customer.balance.toString() }))}
+                    className="px-2.5 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg cursor-pointer transition-colors"
+                  >
+                    Full Due (₹{quickTxn.customer.balance})
+                  </button>
+                )}
               </div>
             </div>
 

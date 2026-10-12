@@ -48,7 +48,7 @@ router.get('/checkout/:customerId', async (req, res, next) => {
         customerPhone: customer.phone || '',
         customerAddress: customer.address || 'Ghatkesar Rd',
         balance: customer.balance,
-        storeName: customer.owner.storeName || 'Digital Udhaar',
+        storeName: customer.owner.storeName || 'VyaparFlow',
         upiId: customer.owner.upiId || '',
         ownerName: customer.owner.name || 'Merchant',
         ownerPhone: customer.owner.phone || '',
@@ -90,7 +90,7 @@ router.get('/checkout/:customerId/receipt', async (req, res, next) => {
 
     // Generate the premium PDF receipt buffer
     const store = {
-      storeName: customer.owner.storeName || 'Digital Udhaar',
+      storeName: customer.owner.storeName || 'VyaparFlow',
       name: customer.owner.name || 'Merchant',
       phone: customer.owner.phone || '',
     };

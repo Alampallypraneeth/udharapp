@@ -45,7 +45,7 @@ const runAutoReminders = async () => {
       }
 
       const owner = customer.owner;
-      const storeName = owner.storeName || 'Digital Udhaar';
+      const storeName = owner.storeName || 'VyaparFlow';
       const upiId = owner.upiId;
       const dueDate = new Date(customer.paymentDueDate);
       const daysDiff = getDaysDiff(today, dueDate);

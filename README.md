@@ -1,31 +1,36 @@
-# 📒 Digital Udhaar Khata (Store Credit Ledger)
+# 🌿 VyaparFlow (Next-Gen Business Ledger & Smart Credit Flow)
 
-A premium, state-of-the-art digital credit ledger application designed specifically for local kirana store owners and small merchants to track, manage, and settle store credit transactions. Built with a monochromatic, ultra-minimal slate design system supporting responsive layouts, automatic real-time sync, multi-language support, automated AI balance reminders, and smooth interactive analytics graphs.
+A premium, state-of-the-art fintech business ledger and credit flow management application designed for modern merchants, kiranas, and business owners. Built with an Emerald & Obsidian Slate design system, real-time sync, Web Audio digital soundbox synthesizer, instant CSV ledger exports, global spotlight search (`⌘K`), and automated payment settlement workflows.
 
 ---
 
 ## 🏗️ Monorepo Directory Architecture
 
-The project is cleanly decoupled into two dedicated sub-folders to facilitate simple separate production deployments (Git updated).
+The project is cleanly decoupled into two dedicated sub-folders:
 
 ```text
-digital-udhaar-app/
+vyaparflow-app/
 ├── backend/            # Node.js Express server, MongoDB models, background jobs & services
 ├── frontend/           # React 19 SPA, Tailwind CSS v4, custom utility hooks & state
 ├── .gitignore          # Root-level secure file ignore definitions
-└── README.md           # This primary setup and architectural summary
+└── README.md           # Primary setup and architectural summary
 ```
 
 ---
 
 ## 🌟 Key Application Features
 
-- 🔳 **Premium Monochromatic UI**: A stunning, ultra-minimal slate aesthetic matching high-end digital ledger interfaces. Supports a sleek light mode (`slate-900`) and a luxury obsidian dark mode (`slate-50`).
-- 📈 **Interactive Cashflow Analytics**: Dynamic weekly vertical bar graph on the merchant dashboard illustrating Credit Given (Udhaar) vs. Payments Got (Jama) comparisons over the last 7 calendar days.
-- 💬 **Zero-Cost WhatsApp Reminders**: Direct Click-to-Chat customer intent linking (`api.whatsapp.com/send`) that pre-fills personalized credit tallies, payment checkout pages, and automatically logs reminders in the ledger logs.
-- 🔒 **Biometric & Lockscreen Simulator**: Elegant mock authentication screen with an offline finger-print/passcode validator modal for merchants securing access to their accounts.
-- 🌐 **Dual-Language Capabilities**: Complete system translation infrastructure toggling between English and Hindi text natively.
-- 🔄 **Real-Time Synchronizations**: Automatic background synchronization of ledger updates across multiple devices simultaneously powered by active WebSockets.
+- 🌿 **Emerald Fintech UI & Design System**: High-contrast, executive Emerald (`#059669` / `#10B981`) & Obsidian Slate theme with fluid glassmorphism and micro-interactions.
+- ⚡ **Spotlight Quick Search (`⌘K` / `Ctrl+K`)**: Instant keyboard-driven global customer search and quick ledger jumping.
+- 🔊 **Digital Soundbox Synthesizer**: Native Web Audio API soundbox with realistic payment chime confirmation on credit settlements (zero external audio files).
+- 📊 **Instant CSV & Excel Ledger Export**: One-click downloadable spreadsheets for customer accounts and overall store khata balances.
+- 🏷️ **Smart Urgency & Due Badges**: Real-time visual status tags (*Overdue*, *Due Today*, *Settled*, *VIP Customer*) for proactive credit recovery.
+- 🧮 **Quick Calculator Chips**: One-tap amount increment buttons (`+₹100`, `+₹500`, `+₹1000`, `+₹2000`, `+₹5000`, `Full Balance`) in transaction dialogs.
+- 📈 **Interactive Cashflow Analytics**: Dynamic cashflow charts illustrating Credit Given vs. Payments Received.
+- 💬 **WhatsApp & SMS Reminders**: Automated and direct Click-to-Chat customer balance alerts with payment checkout links.
+- 🔒 **Biometric / Lockscreen Simulator**: Secure lockscreen authentication with passcode and biometric simulation.
+- 🌐 **Multi-Language Capabilities**: Native switching between English and Hindi.
+- 🔄 **Real-Time Sync**: Live updates powered by WebSocket connections.
 
 ---
 

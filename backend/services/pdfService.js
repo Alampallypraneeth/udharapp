@@ -218,7 +218,7 @@ const buildPDFDocument = (store, customer, transactions, dateRange, doc) => {
     .font('Helvetica')
     .fillColor('#94a3b8')
     .text(
-      `Generated on ${new Date().toLocaleDateString('en-IN')} | Digital Udhaar Khata`,
+      `Generated on ${new Date().toLocaleDateString('en-IN')} | VyaparFlow Ledger`,
       50,
       doc.y,
       { align: 'center' }
@@ -431,7 +431,7 @@ const generateCashbookStatement = (store, entries, dateRange, res) => {
     .font('Helvetica')
     .fillColor('#94a3b8')
     .text(
-      `Generated on ${new Date().toLocaleDateString('en-IN')} | Digital Udhaar Khata Cashbook`,
+      `Generated on ${new Date().toLocaleDateString('en-IN')} | VyaparFlow Cashbook`,
       50,
       doc.y,
       { align: 'center' }
@@ -454,18 +454,18 @@ const generateReceiptPDFBuffer = (store, customer, transaction, customerTransact
       doc.rect(0, 0, 595, 8).fill('#ef4444');
 
       // ─── LOGO (Left) ───
-      doc.rect(40, 25, 20, 26).fill('#ef4444');
+      doc.rect(40, 25, 20, 26).fill('#059669');
       doc.rect(42, 25, 2, 26).fill('#ffffff');
       doc.rect(54, 29, 3, 2).fill('#ffffff');
       doc.rect(54, 35, 3, 2).fill('#ffffff');
       doc.rect(54, 41, 3, 2).fill('#ffffff');
       
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#ef4444').text('UDHAAR', 66, 28);
-      doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('KHATA', 66, 39);
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#059669').text('VYAPAR', 66, 28);
+      doc.fontSize(10).font('Helvetica-Bold').fillColor('#1e293b').text('FLOW', 66, 39);
 
       // ─── STORE INFO (Center) ───
       doc.fontSize(18).font('Helvetica-Bold').fillColor('#0f172a').text(store.storeName, 180, 24, { align: 'center', width: 235 });
-      doc.fontSize(8).font('Helvetica').fillColor('#64748b').text('DIGITAL UDHAAR KHATA', 180, 42, { align: 'center', width: 235 });
+      doc.fontSize(8).font('Helvetica').fillColor('#64748b').text('VYAPARFLOW SMART LEDGER', 180, 42, { align: 'center', width: 235 });
       doc.fontSize(8).font('Helvetica').fillColor('#475569').text(`Owner: ${store.name}  |  Phone: ${store.phone}`, 180, 52, { align: 'center', width: 235 });
 
       // ─── SECURED BADGE (Right) ───
@@ -676,7 +676,7 @@ const generateReceiptPDFBuffer = (store, customer, transaction, customerTransact
       doc.lineWidth(1).strokeColor('#f1f5f9').moveTo(40, discY).lineTo(555, discY).stroke();
       
       doc.fontSize(7).font('Helvetica').fillColor('#94a3b8').text('🔒 This is a computer generated receipt and does not require any signature.', 40, discY + 8, { align: 'center', width: 515 });
-      doc.fontSize(6).font('Helvetica').fillColor('#94a3b8').text('Powered by Digital Udhaar Khata  |  Secured by Cashfree Payments', 40, discY + 18, { align: 'center', width: 515 });
+      doc.fontSize(6).font('Helvetica').fillColor('#94a3b8').text('Powered by VyaparFlow  |  Secured by Cashfree Payments', 40, discY + 18, { align: 'center', width: 515 });
 
       doc.end();
     } catch (err) {

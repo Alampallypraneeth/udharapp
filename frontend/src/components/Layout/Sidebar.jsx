@@ -30,11 +30,15 @@ const Sidebar = ({ isOpen, onClose }) => {
       >
         <div className="flex items-center gap-3 px-3 mb-8">
           <div className="w-11 h-11 rounded-xl bg-pure-white border border-soft-gray flex items-center justify-center p-1.5 shadow-sm">
-            <Logo />
+            <Logo size="100%" />
           </div>
           <div>
-            <div className="text-base font-bold text-deep-navy leading-tight">Udhaar Khata</div>
-            <span className="text-[10px] text-slate-gray font-normal block mt-0.5">{t('digitalLedger')}</span>
+            <div className="text-base font-black text-deep-navy font-outfit tracking-tight leading-tight">
+              Vyapar<span className="text-emerald-500">Flow</span>
+            </div>
+            <span className="text-[10px] text-slate-gray font-medium uppercase tracking-wider block mt-0.5">
+              Smart Ledger
+            </span>
           </div>
         </div>
 

@@ -37,8 +37,10 @@ const LoginPage = () => {
           <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-light-cream border border-soft-gray flex items-center justify-center p-2 shadow-inner">
             <Logo />
           </div>
-          <h1 className="text-2xl font-bold text-deep-navy mb-1">Login</h1>
-          <p className="text-sm text-slate-gray">Sign in to your account</p>
+          <h1 className="text-2xl font-black text-deep-navy mb-1 font-outfit">
+            Welcome to <span className="text-emerald-600">VyaparFlow</span>
+          </h1>
+          <p className="text-sm text-slate-gray">Sign in to your store ledger</p>
         </div>
         
         {error && (

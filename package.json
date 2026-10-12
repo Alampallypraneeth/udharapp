@@ -1,7 +1,7 @@
 {
-  "name": "digital-udhaar-app",
+  "name": "vyaparflow-app",
   "version": "1.0.0",
-  "description": "Digital Udhaar Khata monorepo root",
+  "description": "VyaparFlow — Next-Gen Business Ledger & Credit Flow",
   "main": "server.js",
   "scripts": {
     "build": "cd backend && npm install",
