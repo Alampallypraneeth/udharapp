@@ -1008,10 +1008,10 @@ RULES:
     }
 
     // B. Store / Owner
-    if (normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('my shop') || normalized.includes('my store')) {
+    if (/^(what is|tell me|show me)?\s*(my store|my shop|store name|shop name)\??$/i.test(normalized) || normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('what is my shop') || normalized.includes('what is my store')) {
       return res.json({
         success: true,
-        response: `🏪 Your store name is **"${storeName}"**.\n\n* **Owner:** ${ownerName}\n* **Active Customers:** ${customers.length}\n* **Total Due to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')}`,
+        response: `🏪 Your registered store name is **"${storeName}"**.\n\n* **Owner:** ${ownerName}\n* **Active Customers:** ${customers.length}\n* **Total Due to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')}`,
         suggestions: ["What is my net balance?", "Who has highest due?"]
       });
     }
@@ -1047,7 +1047,7 @@ RULES:
       const topList = debtors.slice(0, 5).map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')}`).join('\n');
       return res.json({
         success: true,
-        response: `💰 **Total Udhaar (To Collect):**\n\nYou have **₹${totalUdhaar.toLocaleString('en-IN')}** across **${debtors.length}** customers with pending dues.\n\n**Top Dues:**\n${topList || 'No pending dues!'}`,
+        response: `💰 **Total Udhaar (To Collect):**\n\nYou have **₹${totalUdhaar.toLocaleString('en-IN')}** across **${debtors.length}** customers with pending dues.\n\n**Top Dues:**\n${topList || 'No pending dues!'}\n\n💡 *Tip: You can send instant WhatsApp or SMS reminders with payment links from the Reminders tab.*`,
         suggestions: ["Send payment reminders", "Who has highest due?", "What is my net balance?"]
       });
     }
@@ -1074,7 +1074,7 @@ RULES:
       }
       return res.json({
         success: true,
-        response: `👑 **Highest Due Customer:**\n\n**${top.name}** has the highest pending due of **₹${top.balance.toLocaleString('en-IN')}**.\n\n* Phone: ${top.phone}\n* Credit Score: ${top.creditScore || 750}`,
+        response: `👑 **Highest Due Customer:**\n\n**${top.name}** has the highest pending due of **₹${top.balance.toLocaleString('en-IN')}**.\n\n* Phone: ${top.phone}\n* Credit Score: ${top.creditScore || 750}\n* Risk: ${(top.riskLevel || 'low').toUpperCase()}`,
         suggestions: [`Send reminder to ${top.name}`, "Who are the risky customers?", "What is my net balance?"]
       });
     }
@@ -1092,12 +1092,23 @@ RULES:
       const list = risky.map((c, i) => `${i + 1}. **${c.name}**: ₹${c.balance.toLocaleString('en-IN')} (Score: ${c.creditScore || 550})`).join('\n');
       return res.json({
         success: true,
-        response: `⚠️ **High Risk / Delay Customers:**\n\n${list}`,
+        response: `⚠️ **High Risk / Delay Customers:**\n\n${list}\n\n💡 *Recommendation: Set shorter credit periods or require partial cash payments before giving additional stock.*`,
         suggestions: ["Send payment reminders", "Who has highest due?"]
       });
     }
 
-    // H. Recent Transactions
+    // H. Credit Scores
+    if (normalized.includes('credit score') || normalized.includes('trust score') || normalized.includes('score')) {
+      const sorted = [...customers].sort((a, b) => (b.creditScore || 750) - (a.creditScore || 750));
+      const top3 = sorted.slice(0, 3).map((c, i) => `${i + 1}. **${c.name}**: ${c.creditScore || 750} / 900 ⭐`).join('\n');
+      return res.json({
+        success: true,
+        response: `📊 **Customer Credit Ratings (300 - 900):**\n\n**Top Rated (Most Trusted):**\n${top3 || 'None'}\n\n*Scores are automatically updated based on repayment velocity and transaction frequency.*`,
+        suggestions: ["Who are the risky customers?", "Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // I. Recent Transactions
     if (normalized.includes('last transaction') || normalized.includes('recent transaction') || normalized.includes('recent payment') || normalized.includes('who paid')) {
       if (transactions.length === 0) {
         return res.json({
@@ -1117,7 +1128,35 @@ RULES:
       });
     }
 
-    // I. Reminders (SMS / WhatsApp)
+    // J. Today's Transactions
+    if (normalized.includes('today') || normalized.includes('आज') || normalized.includes('ఈరోజు')) {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const todayTxns = transactions.filter(t => new Date(t.date) >= startOfToday);
+      const todayGot = todayTxns.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0);
+      const todayGave = todayTxns.filter(t => t.type === 'credit').reduce((s, t) => s + t.amount, 0);
+      return res.json({
+        success: true,
+        response: `📅 **Today's Activity Summary:**\n\n* **Total Collected (Jama):** **₹${todayGot.toLocaleString('en-IN')}**\n* **Total Credit Given (Udhaar):** **₹${todayGave.toLocaleString('en-IN')}**\n* **Total Entries:** ${todayTxns.length} transaction(s)`,
+        suggestions: ["Show this month collection", "What is my net balance?"]
+      });
+    }
+
+    // K. Month Collections
+    if (normalized.includes('month collection') || normalized.includes('monthly collection') || normalized.includes('this month') || normalized.includes('महीना') || normalized.includes('నెల')) {
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const monthTxns = transactions.filter(t => t.type === 'debit' && new Date(t.date) >= startOfMonth);
+      const monthTotal = monthTxns.reduce((s, t) => s + t.amount, 0);
+      return res.json({
+        success: true,
+        response: `📈 **This Month's Collections:**\n\nYou have collected **₹${monthTotal.toLocaleString('en-IN')}** across recent payments this calendar month.`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+
+    // L. Reminders (SMS / WhatsApp)
     if (normalized.includes('sms') || normalized.includes('whatsapp') || normalized.includes('reminder')) {
       return res.json({
         success: true,
@@ -1126,8 +1165,35 @@ RULES:
       });
     }
 
-    // J. Cashbook / Expenses
-    if (normalized.includes('cashbook') || normalized.includes('expense') || normalized.includes('petty cash')) {
+    // M. UPI & QR Checkout
+    if (normalized.includes('upi') || normalized.includes('qr') || normalized.includes('online payment') || normalized.includes('payment link') || normalized.includes('checkout') || normalized.includes('utr')) {
+      return res.json({
+        success: true,
+        response: `💳 **How KhataPay UPI Checkout Works:**\n\n1. Every customer has a unique verified payment page: \`https://udharapp.vercel.app/pay/:customerId\`.\n2. When they click the link, they see your store name (**"${storeName}"**), balance, and a dynamic UPI QR code.\n3. They scan & pay using **GPay, PhonePe, Paytm, or BHIM**.\n4. After paying, they enter their 12-digit **UTR number** to confirm.\n5. The transaction updates your ledger instantly!`,
+        suggestions: ["How to send payment reminder?", "What is my net balance?"]
+      });
+    }
+
+    // N. Soundbox
+    if (normalized.includes('soundbox') || normalized.includes('voice') || normalized.includes('audio') || normalized.includes('chime') || normalized.includes('speaker')) {
+      return res.json({
+        success: true,
+        response: `🔊 **KhataPay Virtual Soundbox:**\n\nKhataPay features a built-in virtual soundbox that announces payment collections in real-time.\n\n* **To Enable/Mute:** Click the **Speaker icon** in the top navigation bar.\n* When active, an audio chime sounds whenever payment is recorded or verified.`,
+        suggestions: ["How to send payment reminder?", "What is my net balance?"]
+      });
+    }
+
+    // O. Export CSV / Reports / Backup
+    if (normalized.includes('export') || normalized.includes('csv') || normalized.includes('excel') || normalized.includes('download') || normalized.includes('backup') || normalized.includes('report')) {
+      return res.json({
+        success: true,
+        response: `📊 **Exporting Reports & Data in KhataPay:**\n\n* **Customer Ledger CSV:** Go to **Customers** and click **"Export CSV"** in the top-right to download an instant spreadsheet of all customer names, phone numbers, balances, and risk levels.\n* **Quick Actions:** Click **"Export CSV"** directly in the Dashboard Quick Actions hub.\n* **Backup:** Click **"Backup"** in Quick Actions or Settings to create a local ledger snapshot.`,
+        suggestions: ["What is my net balance?", "Who has highest due?"]
+      });
+    }
+
+    // P. Cashbook / Expenses
+    if (normalized.includes('cashbook') || normalized.includes('expense') || normalized.includes('expenses') || normalized.includes('petty cash')) {
       return res.json({
         success: true,
         response: `💵 **Cashbook Status:**\n\n* **Total Cash In:** ₹${totalCashIn.toLocaleString('en-IN')}\n* **Total Cash Out (Expenses):** ₹${totalCashOut.toLocaleString('en-IN')}\n* **Net Drawer Cash:** **₹${netCash.toLocaleString('en-IN')}**`,
@@ -1135,7 +1201,16 @@ RULES:
       });
     }
 
-    // K. General helpful reply
+    // Q. Business Advice: How to recover udhaar & kirana store management
+    if (normalized.includes('recover') || normalized.includes('collect debt') || normalized.includes('bad debt') || normalized.includes('advice') || normalized.includes('tips') || normalized.includes('profit') || normalized.includes('margin') || normalized.includes('credit policy')) {
+      return res.json({
+        success: true,
+        response: `💡 **Proven Shopkeeper Rules to Avoid Bad Debts & Recover Udhaar:**\n\n1. **Set Hard Credit Limits:** Never allow any single customer's due to exceed 10-15% of your daily sales volume.\n2. **Send 3-Day Prior Reminders:** Use KhataPay's friendly SMS reminder before the due date, not just when overdue.\n3. **Partial Settlements First:** If a customer can't pay ₹2,000, ask for ₹500 today. Partial payments build repayment discipline.\n4. **Reward Fast Payers:** Give small perks or discounts to customers who maintain an **800+ credit score**.\n5. **Cash on Hand:** Always record your daily petty expenses in the **Cashbook** to track true net profit margins.`,
+        suggestions: ["Risky customers", "Who has highest due?", "What is my net balance?"]
+      });
+    }
+
+    // R. General helpful reply (Answers any unmapped question)
     return res.json({
       success: true,
       response: `I'm here to help with all questions about **"${storeName}"**!\n\n* 💰 **Udhaar to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')} (${customersWithDues} customers)\n* 💵 **Advance Received:** ₹${totalJama.toLocaleString('en-IN')}\n* 📊 **Net Position:** **₹${netBalance.toLocaleString('en-IN')}**\n* 👥 **Total Customers:** ${customers.length}\n* 📥 **Cash in Drawer:** ₹${netCash.toLocaleString('en-IN')}\n\nYou can ask about any customer, payment reminders, cashbook expenses, or debt recovery advice!`,

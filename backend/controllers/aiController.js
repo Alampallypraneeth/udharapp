@@ -531,7 +531,7 @@ YOU MUST RESPOND ONLY WITH A VALID JSON OBJECT:
     }
 
     // B. Store Name / Owner Identity
-    if (normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('my shop') || normalized.includes('my store')) {
+    if (/^(what is|tell me|show me)?\s*(my store|my shop|store name|shop name)\??$/i.test(normalized) || normalized.includes('store name') || normalized.includes('shop name') || normalized.includes('what is my shop') || normalized.includes('what is my store')) {
       return res.status(200).json({
         success: true,
         response: `🏪 Your registered store name is **"${storeName}"**.\n\n* **Owner:** ${ownerName}\n* **Active Customers:** ${customers.length}\n* **Total Due to Collect:** ₹${totalUdhaar.toLocaleString('en-IN')}`,
