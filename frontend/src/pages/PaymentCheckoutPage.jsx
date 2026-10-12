@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import API from '../api/axios';
 import { FaCheckCircle, FaTimesCircle, FaExclamationTriangle, FaArrowLeft, FaQrcode, FaLock, FaCheck, FaCreditCard, FaUser, FaRegClock, FaDownload, FaWhatsapp, FaPrint, FaRegCopy, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -98,7 +98,7 @@ export default function PaymentCheckoutPage() {
 
     const fetchCheckoutInfo = async () => {
       try {
-        const response = await axios.get(`/api/reminders/checkout/${customerId}`);
+        const response = await API.get(`/reminders/checkout/${customerId}`);
         if (response.data?.success) {
           const fetchedData = response.data.data;
           setData(fetchedData);
@@ -162,7 +162,7 @@ export default function PaymentCheckoutPage() {
 
     setSubmitting(true);
     try {
-      const response = await axios.post(`/api/reminders/checkout/${customerId}/confirm-payment`, {
+      const response = await API.post(`/reminders/checkout/${customerId}/confirm-payment`, {
         utr: utr.trim(),
         amount: parseFloat(amountPaid),
       });
@@ -206,6 +206,26 @@ export default function PaymentCheckoutPage() {
         <div className="flex flex-col items-center gap-3">
           <div className="w-12 h-12 border-4 border-orange border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-600 font-bold text-sm">Connecting to secure billing server...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans" style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-xl space-y-4">
+          <div className="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-sm">
+            <FaExclamationTriangle size={36} />
+          </div>
+          <h2 className="text-xl font-black text-slate-800">Payment Link Unavailable</h2>
+          <p className="text-slate-500 text-sm leading-relaxed">{error || 'Could not load store checkout details.'}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all cursor-pointer border-none"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -562,7 +582,7 @@ export default function PaymentCheckoutPage() {
             {/* Action buttons drawer */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 print:hidden">
               <a 
-                href={`/api/reminders/checkout/${customerId}/receipt`}
+                href={`${API.defaults.baseURL || '/api'}/reminders/checkout/${customerId}/receipt`}
                 download
                 className="py-3 px-4 border border-rose-200 text-rose-600 hover:bg-rose-50/50 rounded-xl font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-xs bg-transparent no-underline text-center"
               >
@@ -1024,7 +1044,7 @@ export default function PaymentCheckoutPage() {
             <div className="space-y-4">
               <button 
                 type="submit"
-                disabled={submitting || !upiId}
+                disabled={submitting}
                 className="w-full py-4 px-6 bg-slate-900 hover:bg-slate-950 disabled:bg-slate-300 text-white rounded-2xl font-black text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
               >
                 {submitting ? (

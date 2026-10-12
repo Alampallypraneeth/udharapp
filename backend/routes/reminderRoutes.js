@@ -287,7 +287,7 @@ router.post('/checkout/:customerId/create-order', async (req, res, next) => {
         customer_name: customer.name || 'Valued Customer'
       },
       order_meta: {
-        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/pay/${customerId}?order_id={order_id}`
+        return_url: `${process.env.FRONTEND_URL || 'https://udharapp.vercel.app'}/pay/${customerId}?order_id={order_id}`
       }
     };
 

@@ -43,7 +43,10 @@ const RemindersPage = () => {
       const storeName = user?.storeName || 'Digital Udhaar';
       const cleanPhone = customer.phone.replace(/\D/g, '');
       const formattedPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-      const paymentLink = `${window.location.origin}/pay/${customer._id}`;
+      const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? (import.meta.env.VITE_FRONTEND_URL || 'https://udharapp.vercel.app')
+        : window.location.origin;
+      const paymentLink = `${baseUrl}/pay/${customer._id}`;
       const message = `Namaste ${customer.name}! This is a friendly reminder from ${storeName}. Your pending due amount is ₹${customer.balance}. Please clear it soon. Pay online here: ${paymentLink} - Thank you!`;
       
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
