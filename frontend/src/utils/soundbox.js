@@ -5,12 +5,12 @@
  */
 
 export const isSoundboxEnabled = () => {
-  const saved = localStorage.getItem('vyaparflow-soundbox');
+  const saved = localStorage.getItem('khatapay-soundbox') ?? localStorage.getItem('vyaparflow-soundbox');
   return saved === null ? true : saved === 'true';
 };
 
 export const setSoundboxEnabled = (enabled) => {
-  localStorage.setItem('vyaparflow-soundbox', enabled ? 'true' : 'false');
+  localStorage.setItem('khatapay-soundbox', enabled ? 'true' : 'false');
 };
 
 export const playPaymentSuccessChime = () => {

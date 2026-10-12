@@ -1,4 +1,4 @@
-# 🌿 VyaparFlow (Next-Gen Business Ledger & Smart Credit Flow)
+# 🌿 KhataPay (Smart Business Ledger & Instant UPI Settlements)
 
 A premium, state-of-the-art fintech business ledger and credit flow management application designed for modern merchants, kiranas, and business owners. Built with an Emerald & Obsidian Slate design system, real-time sync, Web Audio digital soundbox synthesizer, instant CSV ledger exports, global spotlight search (`⌘K`), and automated payment settlement workflows.
 
@@ -9,7 +9,7 @@ A premium, state-of-the-art fintech business ledger and credit flow management a
 The project is cleanly decoupled into two dedicated sub-folders:
 
 ```text
-vyaparflow-app/
+khatapay-app/
 ├── backend/            # Node.js Express server, MongoDB models, background jobs & services
 ├── frontend/           # React 19 SPA, Tailwind CSS v4, custom utility hooks & state
 ├── .gitignore          # Root-level secure file ignore definitions

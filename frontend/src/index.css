@@ -15,7 +15,7 @@
   --color-glass: rgba(255, 255, 255, 0.75);
   --shadow-color: rgba(15, 23, 42, 0.04);
   
-  /* VyaparFlow Emerald Primary Palette - Light Mode */
+  /* KhataPay Emerald Primary Palette - Light Mode */
   --color-primary: #059669; /* Emerald 600 */
   --color-primary-hover: #047857; /* Emerald 700 */
   --color-accent: #10B981; /* Emerald 500 */
@@ -37,7 +37,7 @@
   --color-glass: rgba(17, 24, 39, 0.75);
   --shadow-color: rgba(0, 0, 0, 0.5);
   
-  /* VyaparFlow Emerald Primary Palette - Dark Mode */
+  /* KhataPay Emerald Primary Palette - Dark Mode */
   --color-primary: #10B981; /* Emerald 500 */
   --color-primary-hover: #34D399; /* Emerald 400 */
   --color-accent: #059669;

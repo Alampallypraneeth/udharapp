@@ -48,7 +48,7 @@ router.get('/checkout/:customerId', async (req, res, next) => {
         customerPhone: customer.phone || '',
         customerAddress: customer.address || 'Ghatkesar Rd',
         balance: customer.balance,
-        storeName: customer.owner.storeName || 'VyaparFlow',
+        storeName: customer.owner.storeName || 'KhataPay',
         upiId: customer.owner.upiId || '',
         ownerName: customer.owner.name || 'Merchant',
         ownerPhone: customer.owner.phone || '',
@@ -90,7 +90,7 @@ router.get('/checkout/:customerId/receipt', async (req, res, next) => {
 
     // Generate the premium PDF receipt buffer
     const store = {
-      storeName: customer.owner.storeName || 'VyaparFlow',
+      storeName: customer.owner.storeName || 'KhataPay',
       name: customer.owner.name || 'Merchant',
       phone: customer.owner.phone || '',
     };
@@ -282,7 +282,7 @@ router.post('/checkout/:customerId/create-order', async (req, res, next) => {
       order_id: orderId,
       customer_details: {
         customer_id: customer._id.toString(),
-        customer_email: customer.email || 'customer@digitaludhaar.com',
+        customer_email: customer.email || 'customer@khatapay.com',
         customer_phone: customer.phone ? customer.phone.replace(/\D/g, '').slice(-10) : '9999999999',
         customer_name: customer.name || 'Valued Customer'
       },

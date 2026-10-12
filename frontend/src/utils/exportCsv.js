@@ -37,7 +37,7 @@ export const exportToCSV = (filename, rows, headers) => {
 export const exportCustomerLedgerCSV = (customer, transactions) => {
   const safeName = (customer.name || 'Customer').replace(/[^a-zA-Z0-9]/g, '_');
   const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `VyaparFlow_Statement_${safeName}_${dateStr}`;
+  const filename = `KhataPay_Statement_${safeName}_${dateStr}`;
 
   const headers = [
     { label: 'Date', key: 'formattedDate' },
@@ -64,7 +64,7 @@ export const exportCustomerLedgerCSV = (customer, transactions) => {
 
 export const exportAllCustomersCSV = (customers) => {
   const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `VyaparFlow_Customers_Summary_${dateStr}`;
+  const filename = `KhataPay_Customers_Summary_${dateStr}`;
 
   const headers = [
     { label: 'Customer Name', key: 'name' },

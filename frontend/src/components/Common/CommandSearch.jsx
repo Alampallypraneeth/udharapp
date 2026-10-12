@@ -136,7 +136,7 @@ const CommandSearch = ({ isOpen, onClose }) => {
 
         {/* Footer shortcuts */}
         <div className="px-4 py-2.5 bg-light-cream/40 border-t border-soft-gray flex items-center justify-between text-[11px] text-slate-gray">
-          <span>Quick VyaparFlow Spotlight</span>
+          <span>Quick KhataPay Spotlight</span>
           <span className="flex items-center gap-2">
             <span>Press <b>↑</b> <b>↓</b> to navigate</span>
             <span>•</span>

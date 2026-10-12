@@ -38,7 +38,7 @@ const LoginPage = () => {
             <Logo />
           </div>
           <h1 className="text-2xl font-black text-deep-navy mb-1 font-outfit">
-            Welcome to <span className="text-emerald-600">VyaparFlow</span>
+            Welcome to <span className="text-emerald-600">KhataPay</span>
           </h1>
           <p className="text-sm text-slate-gray">Sign in to your store ledger</p>
         </div>

@@ -231,7 +231,7 @@ export default function PaymentCheckoutPage() {
     );
   }
 
-  const storeName = data?.storeName || 'VyaparFlow';
+  const storeName = data?.storeName || 'KhataPay';
   const customerName = data?.customerName || 'Valued Customer';
   const customerPhone = data?.customerPhone || '';
   const customerAddress = data?.customerAddress || 'Ghatkesar Rd';
@@ -313,7 +313,7 @@ export default function PaymentCheckoutPage() {
               {/* Store title & Owner detail */}
               <div className="text-center">
                 <h1 className="text-2xl font-black text-slate-850 tracking-tight">{storeName}</h1>
-                <p className="text-emerald-600 text-[11px] font-bold tracking-wide uppercase">VyaparFlow Smart Ledger</p>
+                <p className="text-emerald-600 text-[11px] font-bold tracking-wide uppercase">KhataPay Smart Ledger</p>
                 <div className="flex justify-center items-center gap-4 text-slate-500 text-[11px] font-semibold mt-1">
                   <span className="flex items-center gap-1">👤 Owner: {ownerName}</span>
                   <span className="flex items-center gap-1">📞 {ownerPhone}</span>
@@ -641,7 +641,7 @@ export default function PaymentCheckoutPage() {
                 This is a computer generated receipt and does not require any signature.
               </p>
               <p className="text-[10px] text-slate-450 font-bold">
-                Powered by VyaparFlow &nbsp;|&nbsp; Secured by <span className="text-indigo-600 font-black">Cashfree Payments</span>
+                Powered by KhataPay &nbsp;|&nbsp; Secured by <span className="text-indigo-600 font-black">Cashfree Payments</span>
               </p>
             </div>
             
@@ -1074,7 +1074,7 @@ export default function PaymentCheckoutPage() {
 
       {/* Page Footer */}
       <div className="w-full text-center py-4 bg-slate-100 border-t border-slate-200/80 text-[10px] text-slate-400 font-semibold shrink-0 print:hidden">
-        Powered by VyaparFlow (Direct & Safe UPI Payments)
+        Powered by KhataPay (Direct & Safe UPI Payments)
       </div>
     </div>
   );

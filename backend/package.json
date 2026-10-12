@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Backend API for VyaparFlow - Smart Business & Credit Flow Ledger",
+  "description": "Backend API for KhataPay - Smart Business Ledger & Instant UPI Settlements",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

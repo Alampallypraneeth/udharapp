@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
           <div>
             <div className="text-base font-black text-deep-navy font-outfit tracking-tight leading-tight">
-              Vyapar<span className="text-emerald-500">Flow</span>
+              Khata<span className="text-emerald-500">Pay</span>
             </div>
             <span className="text-[10px] text-slate-gray font-medium uppercase tracking-wider block mt-0.5">
               Smart Ledger

@@ -40,7 +40,7 @@ const RemindersPage = () => {
       toast.success(data.message || `WhatsApp Reminder sent to ${customer.name}!`);
 
       // 2. Open native WhatsApp click-to-chat window as a bulletproof instant delivery method!
-      const storeName = user?.storeName || 'VyaparFlow';
+      const storeName = user?.storeName || 'KhataPay';
       const cleanPhone = customer.phone.replace(/\D/g, '');
       const formattedPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
       const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

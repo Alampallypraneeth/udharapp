@@ -35,7 +35,7 @@ const LandingPage = () => {
             <Logo size="100%" />
           </div>
           <span className="text-xl font-black text-deep-navy font-outfit tracking-tight">
-            Vyapar<span className="text-emerald-500">Flow</span>
+            Khata<span className="text-emerald-500">Pay</span>
           </span>
         </div>
         
@@ -61,10 +61,10 @@ const LandingPage = () => {
             Next-Gen Merchant Credit OS
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-deep-navy leading-[1.1] font-outfit tracking-tight">
-            Smart Vyapar, <br />
+            Smart Khata, <br />
             <span className="text-emerald-600">Zero Due Losses</span>
           </h1>
-          <h2 className="text-xl md:text-2xl font-bold text-deep-navy/80 font-outfit">with VyaparFlow Intelligent Ledger</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-deep-navy/80 font-outfit">with KhataPay Intelligent Ledger</h2>
           <p className="text-base text-slate-gray leading-relaxed max-w-lg">
             Track customer credit, automate WhatsApp payment reminders, and settle balances instantly with verified UPI payment links.
           </p>
@@ -227,7 +227,7 @@ const LandingPage = () => {
               <HiOutlineDocumentText size={24} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-base font-bold text-deep-navy">VyaparFlow Digital Ledger</h4>
+              <h4 className="text-base font-bold text-deep-navy">KhataPay Digital Ledger</h4>
               <p className="text-xs text-slate-gray leading-relaxed">Maintain all your credit and debit records digitally in one place.</p>
             </div>
           </div>

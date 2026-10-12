@@ -140,7 +140,7 @@ const RegisterPage = () => {
             <Logo />
           </div>
           <h1 className="text-2xl font-black text-deep-navy mb-1 font-outfit">
-            Create <span className="text-emerald-600">VyaparFlow</span> Account
+            Create <span className="text-emerald-600">KhataPay</span> Account
           </h1>
           <p className="text-sm text-slate-gray">Start managing your business ledger digitally</p>
         </div>

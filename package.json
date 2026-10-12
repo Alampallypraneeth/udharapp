@@ -1,7 +1,7 @@
 {
-  "name": "vyaparflow-app",
+  "name": "khatapay-app",
   "version": "1.0.0",
-  "description": "VyaparFlow — Next-Gen Business Ledger & Credit Flow",
+  "description": "KhataPay — Smart Business Ledger & Instant UPI Settlements",
   "main": "server.js",
   "scripts": {
     "build": "cd backend && npm install",

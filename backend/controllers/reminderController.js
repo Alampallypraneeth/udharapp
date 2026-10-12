@@ -27,7 +27,7 @@ const sendFast2SMSSMS = async (req, res, next) => {
       });
     }
 
-    const storeName = req.user.storeName || 'VyaparFlow';
+    const storeName = req.user.storeName || 'KhataPay';
     const frontendUrl = process.env.FRONTEND_URL || 'https://udharapp.vercel.app';
     const message = `Namaste ${customer.name}, you have a pending payment of ₹${customer.balance.toFixed(2)} at ${storeName}. Please clear it soon. Pay at: ${frontendUrl}/pay/${customer._id}`;
 
@@ -67,7 +67,7 @@ const sendCloudWhatsApp = async (req, res, next) => {
       });
     }
 
-    const storeName = req.user.storeName || 'VyaparFlow';
+    const storeName = req.user.storeName || 'KhataPay';
 
     const result = await sendWhatsAppMessage(
       customer.phone,
