@@ -126,6 +126,23 @@ const cashbookSchema = new mongoose.Schema(
 );
 const Cashbook = mongoose.models.CashbookEntry || mongoose.model('CashbookEntry', cashbookSchema);
 
+const historySchema = new mongoose.Schema(
+  {
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+    customerName: { type: String, default: '' },
+    customerPhone: { type: String, default: '' },
+    transactionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
+    type: { type: String, default: 'credit' },
+    amount: { type: Number, default: 0 },
+    description: { type: String, default: '' },
+    date: { type: Date, default: Date.now },
+    action: { type: String, default: 'CREATE' },
+  },
+  { timestamps: true }
+);
+const CustomerHistory = mongoose.models.CustomerHistory || mongoose.model('CustomerHistory', historySchema);
+
 // ── Helper: Generate Token ──
 const generateToken = (id) => jwt.sign({ id }, JWT_SECRET, { expiresIn: '30d' });
 
@@ -499,15 +516,107 @@ app.delete('/api/customers/:id', authGuard, async (req, res) => {
 });
 
 // ── Transactions Endpoints ──
-app.get('/api/transactions', authGuard, async (req, res) => {
+app.get('/api/transactions/stats', authGuard, async (req, res) => {
   try {
+    const ownerId = req.user._id;
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const txs = await Transaction.find({ owner: req.user._id }).populate('customer').sort({ date: -1 });
-      return res.json({ success: true, data: txs });
+      const totalCustomers = await Customer.countDocuments({ owner: ownerId });
+      const balanceAgg = await Customer.aggregate([
+        { $match: { owner: new mongoose.Types.ObjectId(ownerId) } },
+        {
+          $group: {
+            _id: null,
+            youWillGet: { $sum: { $cond: [{ $gt: ['$balance', 0] }, '$balance', 0] } },
+            youWillGive: { $sum: { $cond: [{ $lt: ['$balance', 0] }, { $abs: '$balance' }, 0] } },
+          },
+        },
+      ]);
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayTransactions = await Transaction.countDocuments({
+        owner: ownerId,
+        date: { $gte: todayStart },
+      });
+      const todayAgg = await Transaction.aggregate([
+        { $match: { owner: new mongoose.Types.ObjectId(ownerId), date: { $gte: todayStart } } },
+        {
+          $group: {
+            _id: '$type',
+            total: { $sum: '$amount' },
+          },
+        },
+      ]);
+      const todayCredit = todayAgg.find((a) => a._id === 'credit')?.total || 0;
+      const todayDebit = todayAgg.find((a) => a._id === 'debit')?.total || 0;
+      const customersWithDues = await Customer.countDocuments({
+        owner: ownerId,
+        balance: { $gt: 0 },
+      });
+      const highRiskCount = await Customer.countDocuments({
+        owner: ownerId,
+        riskLevel: 'high',
+      });
+      const pendingTransactions = await Transaction.countDocuments({
+        owner: ownerId,
+        paymentStatus: 'PENDING',
+        type: 'credit',
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          totalCustomers,
+          youWillGet: balanceAgg[0]?.youWillGet || 0,
+          youWillGive: balanceAgg[0]?.youWillGive || 0,
+          todayTransactions,
+          todayCredit,
+          todayDebit,
+          customersWithDues,
+          highRiskCount,
+          pendingTransactions,
+        },
+      });
     }
-    const txs = memoryStore.transactions.filter((t) => t.owner.toString() === req.user._id.toString());
-    res.json({ success: true, data: txs });
+
+    const memCusts = memoryStore.customers.filter((c) => c.owner.toString() === ownerId.toString());
+    const memTxs = memoryStore.transactions.filter((t) => t.owner.toString() === ownerId.toString());
+    const youWillGet = memCusts.filter((c) => c.balance > 0).reduce((sum, c) => sum + c.balance, 0);
+    const youWillGive = memCusts.filter((c) => c.balance < 0).reduce((sum, c) => sum + Math.abs(c.balance), 0);
+    res.json({
+      success: true,
+      data: {
+        totalCustomers: memCusts.length,
+        youWillGet,
+        youWillGive,
+        todayTransactions: memTxs.length,
+        todayCredit: 0,
+        todayDebit: 0,
+        customersWithDues: memCusts.filter((c) => c.balance > 0).length,
+        highRiskCount: 0,
+        pendingTransactions: 0,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/transactions', authGuard, async (req, res) => {
+  try {
+    const { customer, type, limit } = req.query;
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const query = { owner: req.user._id };
+      if (customer) query.customer = customer;
+      if (type) query.type = type;
+      const qLimit = parseInt(limit) || 100;
+      const txs = await Transaction.find(query).populate('customer').sort({ date: -1 }).limit(qLimit);
+      return res.json({ success: true, count: txs.length, data: txs });
+    }
+    let txs = memoryStore.transactions.filter((t) => t.owner.toString() === req.user._id.toString());
+    if (customer) txs = txs.filter((t) => t.customer.toString() === customer.toString());
+    res.json({ success: true, count: txs.length, data: txs });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -515,41 +624,61 @@ app.get('/api/transactions', authGuard, async (req, res) => {
 
 app.post('/api/transactions', authGuard, async (req, res) => {
   try {
-    const { customerId, type, amount, description, paymentMode } = req.body;
+    const { customer, customerId, type, amount, description, paymentMode, date } = req.body;
+    const cid = customer || customerId;
     const numAmount = parseFloat(amount);
+    if (!cid || isNaN(numAmount) || numAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid customer or amount' });
+    }
+
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const customer = await Customer.findOne({ _id: customerId, owner: req.user._id });
-      if (!customer) return res.status(404).json({ success: false, message: 'Customer not found' });
+      const cust = await Customer.findOne({ _id: cid, owner: req.user._id });
+      if (!cust) return res.status(404).json({ success: false, message: 'Customer not found' });
 
       const tx = await Transaction.create({
-        customer: customer._id,
+        customer: cust._id,
         owner: req.user._id,
         type,
         amount: numAmount,
         description: description || '',
         paymentMode: paymentMode || (type === 'credit' ? 'none' : 'cash'),
-        paymentStatus: 'SETTLED',
+        paymentStatus: type === 'debit' ? 'SETTLED' : 'PENDING',
+        date: date ? new Date(date) : new Date(),
       });
 
       if (type === 'credit') {
-        customer.balance += numAmount;
+        cust.balance += numAmount;
       } else {
-        customer.balance -= numAmount;
-        customer.lastPaymentDate = new Date();
+        cust.balance -= numAmount;
+        cust.lastPaymentDate = new Date();
       }
-      customer.totalTransactions += 1;
-      await customer.save();
+      cust.totalTransactions = (cust.totalTransactions || 0) + 1;
+      await cust.save();
 
-      return res.status(201).json({ success: true, data: tx });
+      await CustomerHistory.create({
+        owner: req.user._id,
+        customerId: cust._id,
+        customerName: cust.name,
+        customerPhone: cust.phone,
+        transactionId: tx._id,
+        type,
+        amount: numAmount,
+        description: description || '',
+        date: tx.date,
+        action: 'CREATE',
+      }).catch(() => {});
+
+      await tx.populate('customer');
+      return res.status(201).json({ success: true, data: tx, updatedBalance: cust.balance });
     }
 
-    const c = memoryStore.customers.find((cust) => cust._id.toString() === customerId);
+    const c = memoryStore.customers.find((cust) => cust._id.toString() === cid.toString());
     if (!c) return res.status(404).json({ success: false, message: 'Customer not found' });
     const fakeId = new mongoose.Types.ObjectId().toString();
     const newTx = {
       _id: fakeId,
-      customer: c._id,
+      customer: c,
       owner: req.user._id,
       type,
       amount: numAmount,
@@ -565,13 +694,183 @@ app.post('/api/transactions', authGuard, async (req, res) => {
       c.lastPaymentDate = new Date();
     }
     c.totalTransactions += 1;
-    res.status(201).json({ success: true, data: newTx });
+    res.status(201).json({ success: true, data: newTx, updatedBalance: c.balance });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/transactions/:id/settle', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const tx = await Transaction.findOne({ _id: req.params.id, owner: req.user._id });
+      if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      tx.paymentStatus = 'SETTLED';
+      await tx.save();
+
+      const cust = await Customer.findOne({ _id: tx.customer, owner: req.user._id });
+      if (cust) {
+        if (tx.type === 'credit') {
+          cust.balance = Math.max(0, cust.balance - tx.amount);
+          cust.lastPaymentDate = new Date();
+        } else {
+          cust.balance += tx.amount;
+        }
+        await cust.save();
+      }
+      return res.json({ success: true, data: tx, updatedBalance: cust?.balance });
+    }
+    res.json({ success: true, message: 'Settled' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/transactions/:id/approve', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const tx = await Transaction.findOne({ _id: req.params.id, owner: req.user._id });
+      if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      tx.paymentStatus = 'SETTLED';
+      await tx.save();
+
+      const cust = await Customer.findOne({ _id: tx.customer, owner: req.user._id });
+      if (cust) {
+        cust.balance = Math.max(0, cust.balance - tx.amount);
+        cust.lastPaymentDate = new Date();
+        await cust.save();
+      }
+      return res.json({ success: true, message: 'Approved', data: tx });
+    }
+    res.json({ success: true, message: 'Approved' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/transactions/:id/decline', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const tx = await Transaction.findOne({ _id: req.params.id, owner: req.user._id });
+      if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      tx.paymentStatus = 'FAILED';
+      await tx.save();
+      return res.json({ success: true, message: 'Declined', data: tx });
+    }
+    res.json({ success: true, message: 'Declined' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/transactions/:id', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const tx = await Transaction.findOne({ _id: req.params.id, owner: req.user._id });
+      if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      const cust = await Customer.findById(tx.customer);
+      if (cust) {
+        if (tx.type === 'credit') cust.balance -= tx.amount;
+        else cust.balance += tx.amount;
+        cust.totalTransactions = Math.max(0, (cust.totalTransactions || 0) - 1);
+        await cust.save();
+      }
+      await Transaction.findByIdAndDelete(tx._id);
+      return res.json({ success: true, message: 'Transaction deleted', updatedBalance: cust?.balance });
+    }
+    res.json({ success: true, message: 'Deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.put('/api/transactions/:id', authGuard, async (req, res) => {
+  try {
+    const { amount, description, date, paymentStatus, paymentMode } = req.body;
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const tx = await Transaction.findOne({ _id: req.params.id, owner: req.user._id });
+      if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+      if (amount) tx.amount = parseFloat(amount);
+      if (description !== undefined) tx.description = description;
+      if (date) tx.date = new Date(date);
+      if (paymentStatus) tx.paymentStatus = paymentStatus;
+      if (paymentMode) tx.paymentMode = paymentMode;
+      await tx.save();
+      return res.json({ success: true, data: tx });
+    }
+    res.json({ success: true, message: 'Updated' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── Permanent History Endpoint ──
+app.get('/api/history', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const history = await CustomerHistory.find({ owner: req.user._id }).sort({ date: -1 }).limit(100);
+      return res.json({ success: true, count: history.length, data: history });
+    }
+    res.json({ success: true, count: 0, data: [] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── AI Voice Entry Endpoint ──
+app.post('/api/ai/voice-entry', authGuard, async (req, res) => {
+  try {
+    const { text } = req.body;
+    const amountMatch = (text || '').match(/(\d+)/);
+    const amount = amountMatch ? parseFloat(amountMatch[1]) : 100;
+    const isCredit = /gave|credit|udhaar|diya/i.test(text || '');
+    res.json({
+      success: true,
+      message: `Parsed voice: ₹${amount} ${isCredit ? 'Credit' : 'Payment'}`,
+      data: { amount, type: isCredit ? 'credit' : 'debit' },
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
 // ── Cashbook Endpoints ──
+app.get('/api/cashbook/report', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      const entries = await Cashbook.find({ owner: req.user._id }).sort({ date: -1 });
+      const totalIn = entries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
+      const totalOut = entries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
+      return res.json({
+        success: true,
+        data: { entries, totalIn, totalOut, netBalance: totalIn - totalOut },
+      });
+    }
+    res.json({ success: true, data: { entries: [], totalIn: 0, totalOut: 0, netBalance: 0 } });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.delete('/api/cashbook/:id', authGuard, async (req, res) => {
+  try {
+    const dbReady = await connectToMongo();
+    if (dbReady) {
+      await Cashbook.findOneAndDelete({ _id: req.params.id, owner: req.user._id });
+      return res.json({ success: true, message: 'Entry deleted' });
+    }
+    res.json({ success: true, message: 'Entry deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 app.get('/api/cashbook', authGuard, async (req, res) => {
   try {
     const dbReady = await connectToMongo();
