@@ -57,7 +57,7 @@ const CommandSearch = ({ isOpen, onClose }) => {
       <div className="relative w-full max-w-xl bg-pure-white border border-soft-gray rounded-2xl shadow-2xl overflow-hidden z-10 flex flex-col">
         {/* Search Input Bar */}
         <div className="flex items-center px-4 py-3.5 border-b border-soft-gray gap-3">
-          <HiOutlineSearch className="text-emerald-500 shrink-0" size={22} />
+          <HiOutlineSearch className="text-blue-600 dark:text-blue-400 shrink-0" size={22} />
           <input
             ref={inputRef}
             type="text"
@@ -100,7 +100,7 @@ const CommandSearch = ({ isOpen, onClose }) => {
                   className="flex items-center justify-between p-3 rounded-xl hover:bg-light-cream/70 cursor-pointer transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold text-sm">
                       {customer.avatar ? (
                         <img src={customer.avatar} alt={customer.name} className="w-full h-full rounded-full object-cover" />
                       ) : (
@@ -108,7 +108,7 @@ const CommandSearch = ({ isOpen, onClose }) => {
                       )}
                     </div>
                     <div>
-                      <div className="font-semibold text-sm text-deep-navy group-hover:text-emerald-600 transition-colors">
+                      <div className="font-semibold text-sm text-deep-navy group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {customer.name}
                       </div>
                       <div className="text-xs text-slate-gray">
@@ -126,7 +126,7 @@ const CommandSearch = ({ isOpen, onClose }) => {
                         {customer.riskLevel || 'Low'} Risk
                       </div>
                     </div>
-                    <HiOutlineArrowRight className="text-slate-gray group-hover:text-emerald-500 transition-colors" size={16} />
+                    <HiOutlineArrowRight className="text-slate-gray group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" size={16} />
                   </div>
                 </div>
               );

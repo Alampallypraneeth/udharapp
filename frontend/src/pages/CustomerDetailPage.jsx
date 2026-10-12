@@ -469,11 +469,11 @@ const CustomerDetailPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <div className="bg-pure-white border border-soft-gray rounded-2xl p-6 shadow-sm space-y-4">
           <div className="flex flex-col items-center py-3 border-b border-soft-gray/50">
-            <div className="w-20 h-20 rounded-full border-2 border-emerald-500/25 overflow-hidden flex items-center justify-center bg-light-cream shadow-sm relative mb-3">
+            <div className="w-20 h-20 rounded-full border-2 border-blue-500/25 overflow-hidden flex items-center justify-center bg-light-cream shadow-sm relative mb-3">
               {customer.avatar ? (
                 <img src={customer.avatar} alt={customer.name} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-black text-emerald-600 uppercase">{customer.name.charAt(0)}</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400 uppercase">{customer.name.charAt(0)}</span>
               )}
             </div>
             <h4 className="text-base font-bold text-deep-navy m-0">{customer.name}</h4>
@@ -598,7 +598,7 @@ const CustomerDetailPage = () => {
               </div>
             )}
 
-            <button className="w-full py-2.5 bg-transparent hover:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={openEditCustomerModal}>
+            <button className="w-full py-2.5 bg-transparent hover:bg-blue-500/5 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={openEditCustomerModal}>
               <HiOutlinePencil size={14} /> Edit Customer Profile
             </button>
           </div>
@@ -881,7 +881,7 @@ const CustomerDetailPage = () => {
                   key={val}
                   type="button"
                   onClick={() => setTxnForm(prev => ({ ...prev, amount: ((parseFloat(prev.amount) || 0) + val).toString() }))}
-                  className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-emerald-500/10 hover:text-emerald-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-blue-500/10 hover:text-blue-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
                 >
                   +₹{val}
                 </button>
@@ -890,7 +890,7 @@ const CustomerDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setTxnForm(prev => ({ ...prev, amount: customer.balance.toString() }))}
-                  className="px-2.5 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg cursor-pointer transition-colors"
+                  className="px-2.5 py-1 text-[11px] font-bold bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 rounded-lg cursor-pointer transition-colors"
                 >
                   Full Balance (₹{customer.balance})
                 </button>

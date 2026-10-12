@@ -240,10 +240,10 @@ const CustomersPage = () => {
             onClick={() => exportAllCustomersCSV(customers)}
             title="Download CSV spreadsheet report of all customers"
           >
-            <HiOutlineDownload size={16} className="text-emerald-600" /> Export CSV
+            <HiOutlineDownload size={16} className="text-blue-600 dark:text-blue-400" /> Export CSV
           </button>
           <button 
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0A1128] hover:bg-[#1E293B] dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-slate-900/20" 
             onClick={() => setShowForm(true)}
           >
             <HiOutlinePlus size={16} /> {t('addCustomer')}
@@ -257,7 +257,7 @@ const CustomersPage = () => {
             <h3 className="text-lg font-bold text-deep-navy mb-0">No customer found matching "{search}"</h3>
             <p className="text-sm text-slate-gray mt-0">Would you like to add them to your ledger?</p>
             <button 
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0A1128] hover:bg-[#1E293B] dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-slate-900/20" 
               onClick={() => {
                 setForm(prev => ({ ...prev, name: search }));
                 setShowForm(true);
@@ -271,7 +271,7 @@ const CustomersPage = () => {
             <h3 className="text-lg font-bold text-deep-navy mb-0">{t('noCustomers')}</h3>
             <p className="text-sm text-slate-gray mt-0">{t('addFirstCustomer')}</p>
             <button 
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-pure-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-emerald-600/20" 
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0A1128] hover:bg-[#1E293B] dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl text-sm font-bold border-none cursor-pointer transition-all shadow-xs shadow-slate-900/20" 
               onClick={() => setShowForm(true)}
             >
               <HiOutlinePlus size={16} /> {t('addCustomer')}
@@ -300,10 +300,10 @@ const CustomersPage = () => {
                         {c.avatar ? (
                           <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-xs font-black text-emerald-600 uppercase">{c.name.charAt(0)}</span>
+                          <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase">{c.name.charAt(0)}</span>
                         )}
                       </div>
-                      <Link to={`/customers/${c._id}`} className="text-deep-navy font-bold hover:text-emerald-600 transition-colors decoration-none">
+                      <Link to={`/customers/${c._id}`} className="text-deep-navy font-bold hover:text-blue-600 dark:hover:text-blue-400 transition-colors decoration-none">
                         {c.name}
                       </Link>
                     </div>
@@ -552,7 +552,7 @@ const CustomersPage = () => {
                     key={val}
                     type="button"
                     onClick={() => setQuickForm(prev => ({ ...prev, amount: ((parseFloat(prev.amount) || 0) + val).toString() }))}
-                    className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-emerald-500/10 hover:text-emerald-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
+                    className="px-2.5 py-1 text-[11px] font-bold bg-light-cream hover:bg-blue-500/10 hover:text-blue-600 border border-soft-gray rounded-lg cursor-pointer text-slate-gray transition-colors"
                   >
                     +₹{val}
                   </button>
@@ -561,7 +561,7 @@ const CustomersPage = () => {
                   <button
                     type="button"
                     onClick={() => setQuickForm(prev => ({ ...prev, amount: quickTxn.customer.balance.toString() }))}
-                    className="px-2.5 py-1 text-[11px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 rounded-lg cursor-pointer transition-colors"
+                    className="px-2.5 py-1 text-[11px] font-bold bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 rounded-lg cursor-pointer transition-colors"
                   >
                     Full Due (₹{quickTxn.customer.balance})
                   </button>

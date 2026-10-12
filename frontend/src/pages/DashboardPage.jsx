@@ -319,20 +319,20 @@ const DashboardPage = () => {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Net Store Position Card */}
-        <div className="p-5 bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 text-white rounded-2xl shadow-md shadow-emerald-700/20 relative overflow-hidden flex flex-col justify-between">
+        <div className="p-5 bg-gradient-to-br from-[#0A1128] via-[#0F172A] to-[#1E3A8A] text-white rounded-2xl shadow-xl shadow-slate-950/20 relative overflow-hidden flex flex-col justify-between">
           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-100/90">{t('totalBalance') || 'Net Balance'}</span>
-            <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-bold backdrop-blur-xs">Live Tally</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">{t('totalBalance') || 'Net Balance'}</span>
+            <span className="px-2 py-0.5 rounded-full bg-white/15 text-[10px] font-bold backdrop-blur-xs">Live Tally</span>
           </div>
           <div className="my-3">
             <span className="text-2xl font-black font-outfit tracking-tight block">
               ₹{((stats?.youWillGet || 0) - (stats?.youWillGive || 0)).toLocaleString('en-IN')}
             </span>
-            <span className="text-xs text-emerald-100/80 font-medium block mt-0.5">Total Store Ledger Balance</span>
+            <span className="text-xs text-slate-300/80 font-medium block mt-0.5">Total Store Ledger Balance</span>
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] text-emerald-200 font-semibold pt-1 border-t border-white/15">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+          <div className="flex items-center gap-1.5 text-[11px] text-blue-200 font-semibold pt-1 border-t border-white/15">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
             <span>Updated in real-time</span>
           </div>
         </div>
@@ -453,7 +453,7 @@ const DashboardPage = () => {
 
           <button
             onClick={() => setShowCustModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl border-none transition-all cursor-pointer shadow-xs shadow-emerald-600/20"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0A1128] hover:bg-[#1E293B] dark:bg-blue-600 dark:hover:bg-blue-700 text-white text-xs font-bold rounded-xl border-none transition-all cursor-pointer shadow-xs shadow-slate-900/20"
           >
             <HiOutlineUserAdd size={14} /> Add Customer
           </button>
@@ -919,10 +919,10 @@ const DashboardPage = () => {
               </button>
               <button 
                 onClick={() => exportAllCustomersCSV(customers)}
-                className="p-4 bg-pure-white border border-soft-gray rounded-xl flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:border-emerald-500 hover:shadow-xs hover:-translate-y-0.5 transition-all text-deep-navy font-semibold text-xs"
+                className="p-4 bg-pure-white border border-soft-gray rounded-xl flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:border-blue-600 hover:shadow-xs hover:-translate-y-0.5 transition-all text-deep-navy font-semibold text-xs"
                 title="Download CSV spreadsheet report of all customers"
               >
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center text-lg">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
                   <HiOutlineDownload />
                 </div>
                 <span>Export CSV</span>

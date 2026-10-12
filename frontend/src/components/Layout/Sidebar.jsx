@@ -45,7 +45,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
           <div>
             <div className="text-base font-black text-deep-navy font-outfit tracking-tight leading-tight">
-              Khata<span className="text-emerald-500">Pay</span>
+              Khata<span className="text-blue-600 dark:text-blue-400">Pay</span>
             </div>
             <span className="text-[10px] text-slate-gray font-semibold uppercase tracking-wider block mt-0.5">
               Smart Ledger & UPI
@@ -63,7 +63,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               className={({ isActive }) => 
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
                   isActive 
-                    ? 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-sm shadow-emerald-600/25 font-bold' 
+                    ? 'text-white bg-gradient-to-r from-[#0A1128] via-[#0F172A] to-[#1E3A8A] shadow-md shadow-slate-900/30 font-bold' 
                     : 'text-slate-gray hover:text-deep-navy hover:bg-light-cream/70'
                 }`
               }
@@ -78,13 +78,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Merchant Status Footer Card */}
         <div className="pt-4 border-t border-soft-gray/60">
           <div className="p-3 rounded-xl bg-light-cream/60 border border-soft-gray/60 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
               <HiOutlineShieldCheck size={18} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider truncate">Active Store</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />
+                <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider truncate">Active Store</span>
               </div>
               <div className="text-xs font-bold text-deep-navy truncate mt-0.5">
                 {user?.storeName || 'My Khata Store'}

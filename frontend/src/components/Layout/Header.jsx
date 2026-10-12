@@ -98,7 +98,7 @@ const Header = ({ title, subtitle, onToggleSidebar }) => {
             className="hidden md:flex items-center gap-2 px-3.5 py-1.5 bg-light-cream/70 hover:bg-light-cream border border-soft-gray rounded-xl text-slate-gray hover:text-deep-navy text-xs font-medium cursor-pointer transition-all shadow-2xs"
             title="Quick Customer Search (Cmd+K)"
           >
-            <HiOutlineSearch className="text-emerald-500" size={15} />
+            <HiOutlineSearch className="text-blue-600 dark:text-blue-400" size={15} />
             <span>Search ledger...</span>
             <kbd className="text-[10px] font-semibold bg-pure-white px-1.5 py-0.5 rounded border border-soft-gray ml-2 text-slate-gray/70">
               ⌘K
@@ -108,7 +108,7 @@ const Header = ({ title, subtitle, onToggleSidebar }) => {
           {/* Mobile Search Icon */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="md:hidden w-9 h-9 bg-pure-white border border-soft-gray hover:bg-light-cream/50 rounded-full cursor-pointer text-slate-gray hover:text-emerald-500 transition-all flex items-center justify-center shadow-xs"
+            className="md:hidden w-9 h-9 bg-pure-white border border-soft-gray hover:bg-light-cream/50 rounded-full cursor-pointer text-slate-gray hover:text-blue-600 dark:hover:text-blue-400 transition-all flex items-center justify-center shadow-xs"
             title="Quick Search"
           >
             <HiOutlineSearch size={18} />
@@ -119,7 +119,7 @@ const Header = ({ title, subtitle, onToggleSidebar }) => {
             onClick={handleToggleSound}
             className={`w-9 h-9 border rounded-full cursor-pointer transition-all flex items-center justify-center shadow-xs outline-none ${
               soundEnabled 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                ? 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400' 
                 : 'bg-pure-white border-soft-gray text-slate-gray hover:text-deep-navy'
             }`}
             title={soundEnabled ? 'Payment Soundbox: Active (Click to mute)' : 'Payment Soundbox: Muted (Click to enable)'}
@@ -147,10 +147,10 @@ const Header = ({ title, subtitle, onToggleSidebar }) => {
           {/* User Profile Menu */}
           <div className="relative" ref={dropdownRef}>
             <button
-              className="flex items-center gap-2.5 p-1 pr-3 bg-pure-white border border-soft-gray rounded-full cursor-pointer hover:bg-light-cream/30 hover:border-emerald-500/30 transition-all text-deep-navy outline-none"
+              className="flex items-center gap-2.5 p-1 pr-3 bg-pure-white border border-soft-gray rounded-full cursor-pointer hover:bg-light-cream/30 hover:border-blue-500/30 transition-all text-deep-navy outline-none"
               onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-400 flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0 shadow-inner">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0A1128] via-[#0F172A] to-[#1E3A8A] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0 shadow-inner">
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
                 ) : (

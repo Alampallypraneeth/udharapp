@@ -27,7 +27,7 @@ const LandingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F0FDF4] via-[#F8FAFC] to-[#ECFDF5] text-deep-navy font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9] text-deep-navy font-sans">
       {/* Header / Navbar */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-pure-white/80 backdrop-blur-md border-b border-soft-gray px-8 md:px-16 flex items-center justify-between z-40">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -35,7 +35,7 @@ const LandingPage = () => {
             <Logo size="100%" />
           </div>
           <span className="text-xl font-black text-deep-navy font-outfit tracking-tight">
-            Khata<span className="text-emerald-500">Pay</span>
+            Khata<span className="text-blue-600">Pay</span>
           </span>
         </div>
         
@@ -45,7 +45,7 @@ const LandingPage = () => {
             <span>+91 98765 43210</span>
           </a>
           <button 
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer border-none" 
+            className="px-6 py-2.5 bg-[#0A1128] hover:bg-[#1E293B] text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-slate-900/20 cursor-pointer border-none" 
             onClick={() => navigate('/login')}
           >
             Log In
@@ -56,13 +56,13 @@ const LandingPage = () => {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-8 md:px-16 pt-32 pb-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 font-semibold text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-800 font-semibold text-xs">
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
             Next-Gen Merchant Credit OS
           </div>
           <h1 className="text-5xl md:text-6xl font-black text-deep-navy leading-[1.1] font-outfit tracking-tight">
             Smart Khata, <br />
-            <span className="text-emerald-600">Zero Due Losses</span>
+            <span className="text-blue-600">Zero Due Losses</span>
           </h1>
           <h2 className="text-xl md:text-2xl font-bold text-deep-navy/80 font-outfit">with KhataPay Intelligent Ledger</h2>
           <p className="text-base text-slate-gray leading-relaxed max-w-lg">

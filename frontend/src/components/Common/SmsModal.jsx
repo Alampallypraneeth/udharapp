@@ -89,7 +89,7 @@ const SmsModal = ({ isOpen, onClose, customer, storeName = 'KhataPay' }) => {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-soft-gray bg-light-cream/30">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
               <FaSms size={18} />
             </div>
             <div>
@@ -131,7 +131,7 @@ const SmsModal = ({ isOpen, onClose, customer, storeName = 'KhataPay' }) => {
                 onClick={() => setTemplate('friendly')}
                 className={`py-2 px-3 rounded-lg text-xs font-semibold border transition-all text-center cursor-pointer ${
                   template === 'friendly'
-                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-700 font-bold'
+                    ? 'bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-400 font-bold'
                     : 'bg-pure-white border-soft-gray text-slate-gray hover:border-slate-300'
                 }`}
               >
@@ -176,13 +176,13 @@ const SmsModal = ({ isOpen, onClose, customer, storeName = 'KhataPay' }) => {
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full p-3 text-sm bg-light-cream/30 border border-soft-gray rounded-xl text-deep-navy focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none leading-relaxed resize-none font-sans"
+              className="w-full p-3 text-sm bg-light-cream/30 border border-soft-gray rounded-xl text-deep-navy focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none leading-relaxed resize-none font-sans"
             />
           </div>
 
           {/* Verified Link indicator */}
-          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs">
-            <HiOutlineSparkles size={16} className="text-emerald-600 shrink-0" />
+          <div className="flex items-center gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-800 dark:text-blue-300 text-xs">
+            <HiOutlineSparkles size={16} className="text-blue-600 dark:text-blue-400 shrink-0" />
             <span className="truncate">Includes instant UPI settlement link: <b className="font-mono">{paymentLink}</b></span>
           </div>
         </div>
@@ -195,7 +195,7 @@ const SmsModal = ({ isOpen, onClose, customer, storeName = 'KhataPay' }) => {
             className="w-full sm:w-auto px-4 py-2.5 bg-pure-white hover:bg-slate-50 border border-soft-gray text-slate-gray hover:text-deep-navy rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
             title="Copy SMS text"
           >
-            {copied ? <FaCheck className="text-emerald-600" /> : <FaRegCopy />}
+            {copied ? <FaCheck className="text-blue-600 dark:text-blue-400" /> : <FaRegCopy />}
             <span>{copied ? 'Copied' : 'Copy Text'}</span>
           </button>
 
@@ -217,7 +217,7 @@ const SmsModal = ({ isOpen, onClose, customer, storeName = 'KhataPay' }) => {
           <button
             type="button"
             onClick={handleOpenNativeSMS}
-            className="w-full sm:flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20 cursor-pointer"
+            className="w-full sm:flex-1 px-4 py-2.5 bg-[#0A1128] hover:bg-[#1E293B] dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm shadow-slate-900/20 cursor-pointer"
             title="Open in your device's native SMS app with pre-filled text"
           >
             <HiOutlineDeviceMobile size={16} />

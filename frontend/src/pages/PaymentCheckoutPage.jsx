@@ -313,7 +313,7 @@ export default function PaymentCheckoutPage() {
               {/* Store title & Owner detail */}
               <div className="text-center">
                 <h1 className="text-2xl font-black text-slate-850 tracking-tight">{storeName}</h1>
-                <p className="text-emerald-600 text-[11px] font-bold tracking-wide uppercase">KhataPay Smart Ledger</p>
+                <p className="text-blue-700 text-[11px] font-bold tracking-wide uppercase">KhataPay Smart Ledger</p>
                 <div className="flex justify-center items-center gap-4 text-slate-500 text-[11px] font-semibold mt-1">
                   <span className="flex items-center gap-1">👤 Owner: {ownerName}</span>
                   <span className="flex items-center gap-1">📞 {ownerPhone}</span>
@@ -321,8 +321,8 @@ export default function PaymentCheckoutPage() {
               </div>
 
               {/* Secured Badge */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full font-bold text-[10px] border border-emerald-100 shadow-xs">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full font-bold text-[10px] border border-blue-100 shadow-xs">
+                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
                 <span>Secured by Cashfree Payments</span>
               </div>
             </div>
@@ -1061,8 +1061,8 @@ export default function PaymentCheckoutPage() {
               </button>
 
               {/* Secure note */}
-              <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-3 flex items-start gap-2.5">
-                <FaLock size={12} className="text-emerald-600 shrink-0 mt-0.5" />
+              <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-3 flex items-start gap-2.5">
+                <FaLock size={12} className="text-blue-600 shrink-0 mt-0.5" />
                 <p className="text-slate-500 text-[10px] leading-relaxed font-medium">
                   Verified UTR numbers are cross-referenced instantly. Fake or invalid UTR claims will not update the dashboard.
                 </p>

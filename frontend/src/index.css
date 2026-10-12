@@ -4,43 +4,44 @@
   --bg-main: #F8FAFC;
   --bg-card: #FFFFFF;
   --bg-sidebar: #FFFFFF;
-  --bg-header: rgba(248, 250, 252, 0.85);
+  --bg-header: rgba(255, 255, 255, 0.9);
   --border-main: #E2E8F0;
-  --text-main: #0F172A;
+  --text-main: #0A1128; /* Midnight Navy primary text */
   --text-muted: #64748B;
   --bg-input: #FFFFFF;
   --bg-soft-white: #FFFFFF;
   --bg-light-cream: #F1F5F9;
   --bg-pure-white: #FFFFFF;
-  --color-glass: rgba(255, 255, 255, 0.75);
-  --shadow-color: rgba(15, 23, 42, 0.04);
+  --color-glass: rgba(255, 255, 255, 0.85);
+  --shadow-color: rgba(10, 17, 40, 0.05);
   
-  /* KhataPay Emerald Primary Palette - Light Mode */
-  --color-primary: #059669; /* Emerald 600 */
-  --color-primary-hover: #047857; /* Emerald 700 */
-  --color-accent: #10B981; /* Emerald 500 */
+  /* KhataPay White + Midnight Navy Primary Palette - Light Mode */
+  --color-primary: #0F172A; /* Deep Midnight Navy */
+  --color-primary-hover: #1E293B; /* Slate Navy Hover */
+  --color-accent: #1E3A8A; /* Royal Navy Accent */
+  --color-accent-blue: #2563EB; /* Electric Cobalt Blue */
   --color-gold: #F59E0B;
 }
 
 .dark {
-  --bg-main: #0B0F17; /* Deep Obsidian Slate */
-  --bg-card: #111827; /* Rich Charcoal */
-  --bg-sidebar: #0D121F;
-  --bg-header: rgba(11, 15, 23, 0.85);
+  --bg-main: #070D1E; /* Obsidian Midnight Navy */
+  --bg-card: #0F172A; /* Rich Navy Card */
+  --bg-sidebar: #0A1128; /* Midnight Sidebar */
+  --bg-header: rgba(10, 17, 40, 0.88);
   --border-main: #1E293B;
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
-  --bg-input: #111827;
-  --bg-soft-white: #111827;
-  --bg-light-cream: #1E293B;
-  --bg-pure-white: #162032;
-  --color-glass: rgba(17, 24, 39, 0.75);
-  --shadow-color: rgba(0, 0, 0, 0.5);
+  --bg-input: #0F172A;
+  --bg-soft-white: #0F172A;
+  --bg-light-cream: #142038;
+  --bg-pure-white: #111E38;
+  --color-glass: rgba(15, 23, 42, 0.85);
+  --shadow-color: rgba(0, 0, 0, 0.6);
   
-  /* KhataPay Emerald Primary Palette - Dark Mode */
-  --color-primary: #10B981; /* Emerald 500 */
-  --color-primary-hover: #34D399; /* Emerald 400 */
-  --color-accent: #059669;
+  /* KhataPay White + Midnight Navy Primary Palette - Dark Mode */
+  --color-primary: #3B82F6; /* Cobalt Blue Primary */
+  --color-primary-hover: #60A5FA;
+  --color-accent: #2563EB;
   --color-gold: #FBBF24;
 }
 
@@ -54,13 +55,17 @@
   --color-soft-gray: var(--border-main);
   --color-pure-white: var(--bg-pure-white);
   
-  --color-premium-dark: #0B0F17;
+  --color-premium-dark: #070D1E;
   --color-emerald-brand: var(--color-primary);
+  --color-navy-primary: #0F172A;
+  --color-navy-midnight: #0A1128;
+  --color-navy-accent: #1E3A8A;
+  --color-blue-cobalt: #2563EB;
   
   --color-green-get: #10B981;
   --color-red-give: #F43F5E;
   --color-warning-pending: #F59E0B;
-  --color-info-analytics: #3B82F6;
+  --color-info-analytics: #2563EB;
   
   --color-green-hover: #059669;
   --color-red-hover: #E11D48;
@@ -102,8 +107,8 @@ input, select, textarea {
   transition: all 0.2s ease-in-out;
 }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
 }
 
 /* Smooth Transition class for theme toggle */
@@ -138,8 +143,12 @@ body, header, aside, tr, td, th, input, select, textarea, button,
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.navy-gradient {
+  background: linear-gradient(135deg, #0A1128 0%, #0F172A 50%, #1E3A8A 100%);
+}
+
 .emerald-gradient {
-  background: linear-gradient(135deg, #059669 0%, #10B981 100%);
+  background: linear-gradient(135deg, #0A1128 0%, #1E3A8A 100%);
 }
 
 /* Button click tactile feel */
