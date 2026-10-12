@@ -30,7 +30,11 @@ async function connectToMongo() {
   if (!cachedPromise) {
     cachedPromise = mongoose
       .connect(uri, {
-        serverSelectionTimeoutMS: 6000,
+        maxPoolSize: 10,
+        minPoolSize: 1,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 25000,
+        family: 4,
       })
       .then(() => {
         console.log('✅ Connected to MongoDB Atlas on Vercel');
@@ -142,6 +146,15 @@ const historySchema = new mongoose.Schema(
   { timestamps: true }
 );
 const CustomerHistory = mongoose.models.CustomerHistory || mongoose.model('CustomerHistory', historySchema);
+
+// ── Database High-Performance Indexes ──
+userSchema.index({ email: 1 });
+customerSchema.index({ owner: 1, balance: -1 });
+customerSchema.index({ owner: 1, name: 1 });
+transactionSchema.index({ owner: 1, date: -1 });
+transactionSchema.index({ customer: 1, date: -1 });
+cashbookSchema.index({ owner: 1, date: -1 });
+historySchema.index({ owner: 1, date: -1 });
 
 // ── Helper: Generate Token ──
 const generateToken = (id) => jwt.sign({ id }, JWT_SECRET, { expiresIn: '30d' });
@@ -404,11 +417,11 @@ app.get('/api/customers', authGuard, async (req, res) => {
   try {
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const customers = await Customer.find({ owner: req.user._id }).sort({ balance: -1 });
-      return res.json({ success: true, data: customers });
+      const customers = await Customer.find({ owner: req.user._id }).sort({ balance: -1 }).lean();
+      return res.json({ success: true, count: customers.length, data: customers });
     }
     const memCusts = memoryStore.customers.filter((c) => c.owner.toString() === req.user._id.toString());
-    res.json({ success: true, data: memCusts });
+    res.json({ success: true, count: memCusts.length, data: memCusts });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -460,10 +473,12 @@ app.get('/api/customers/:id', authGuard, async (req, res) => {
   try {
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const customer = await Customer.findOne({ _id: req.params.id, owner: req.user._id });
+      const [customer, transactions] = await Promise.all([
+        Customer.findOne({ _id: req.params.id, owner: req.user._id }).lean(),
+        Transaction.find({ customer: req.params.id, owner: req.user._id }).sort({ date: -1 }).limit(100).lean(),
+      ]);
       if (!customer) return res.status(404).json({ success: false, message: 'Customer not found' });
-      const transactions = await Transaction.find({ customer: customer._id }).sort({ date: -1 });
-      return res.json({ success: true, data: { ...customer.toObject(), transactions } });
+      return res.json({ success: true, data: { ...customer, transactions } });
     }
 
     const c = memoryStore.customers.find(
@@ -521,47 +536,59 @@ app.get('/api/transactions/stats', authGuard, async (req, res) => {
     const ownerId = req.user._id;
     const dbReady = await connectToMongo();
     if (dbReady) {
-      const totalCustomers = await Customer.countDocuments({ owner: ownerId });
-      const balanceAgg = await Customer.aggregate([
-        { $match: { owner: new mongoose.Types.ObjectId(ownerId) } },
-        {
-          $group: {
-            _id: null,
-            youWillGet: { $sum: { $cond: [{ $gt: ['$balance', 0] }, '$balance', 0] } },
-            youWillGive: { $sum: { $cond: [{ $lt: ['$balance', 0] }, { $abs: '$balance' }, 0] } },
-          },
-        },
-      ]);
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      const todayTransactions = await Transaction.countDocuments({
-        owner: ownerId,
-        date: { $gte: todayStart },
-      });
-      const todayAgg = await Transaction.aggregate([
-        { $match: { owner: new mongoose.Types.ObjectId(ownerId), date: { $gte: todayStart } } },
-        {
-          $group: {
-            _id: '$type',
-            total: { $sum: '$amount' },
+
+      const [
+        totalCustomers,
+        balanceAgg,
+        todayTransactions,
+        todayAgg,
+        customersWithDues,
+        highRiskCount,
+        pendingTransactions,
+      ] = await Promise.all([
+        Customer.countDocuments({ owner: ownerId }),
+        Customer.aggregate([
+          { $match: { owner: new mongoose.Types.ObjectId(ownerId) } },
+          {
+            $group: {
+              _id: null,
+              youWillGet: { $sum: { $cond: [{ $gt: ['$balance', 0] }, '$balance', 0] } },
+              youWillGive: { $sum: { $cond: [{ $lt: ['$balance', 0] }, { $abs: '$balance' }, 0] } },
+            },
           },
-        },
+        ]),
+        Transaction.countDocuments({
+          owner: ownerId,
+          date: { $gte: todayStart },
+        }),
+        Transaction.aggregate([
+          { $match: { owner: new mongoose.Types.ObjectId(ownerId), date: { $gte: todayStart } } },
+          {
+            $group: {
+              _id: '$type',
+              total: { $sum: '$amount' },
+            },
+          },
+        ]),
+        Customer.countDocuments({
+          owner: ownerId,
+          balance: { $gt: 0 },
+        }),
+        Customer.countDocuments({
+          owner: ownerId,
+          riskLevel: 'high',
+        }),
+        Transaction.countDocuments({
+          owner: ownerId,
+          paymentStatus: 'PENDING',
+          type: 'credit',
+        }),
       ]);
+
       const todayCredit = todayAgg.find((a) => a._id === 'credit')?.total || 0;
       const todayDebit = todayAgg.find((a) => a._id === 'debit')?.total || 0;
-      const customersWithDues = await Customer.countDocuments({
-        owner: ownerId,
-        balance: { $gt: 0 },
-      });
-      const highRiskCount = await Customer.countDocuments({
-        owner: ownerId,
-        riskLevel: 'high',
-      });
-      const pendingTransactions = await Transaction.countDocuments({
-        owner: ownerId,
-        paymentStatus: 'PENDING',
-        type: 'credit',
-      });
 
       return res.status(200).json({
         success: true,
@@ -611,7 +638,11 @@ app.get('/api/transactions', authGuard, async (req, res) => {
       if (customer) query.customer = customer;
       if (type) query.type = type;
       const qLimit = parseInt(limit) || 100;
-      const txs = await Transaction.find(query).populate('customer').sort({ date: -1 }).limit(qLimit);
+      const txs = await Transaction.find(query)
+        .populate('customer', 'name phone balance avatar')
+        .sort({ date: -1 })
+        .limit(qLimit)
+        .lean();
       return res.json({ success: true, count: txs.length, data: txs });
     }
     let txs = memoryStore.transactions.filter((t) => t.owner.toString() === req.user._id.toString());
@@ -914,17 +945,20 @@ app.get('/api/cashbook', authGuard, async (req, res) => {
         query.date = dateFilter;
       }
 
-      const entries = await Cashbook.find(query).sort({ date: -1 });
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+
+      const [entries, allEntries] = await Promise.all([
+        Cashbook.find(query).sort({ date: -1 }).lean(),
+        Cashbook.find({ owner: ownerId }, 'type amount date').lean(),
+      ]);
 
       // Lifetime cash in hand
-      const allEntries = await Cashbook.find({ owner: ownerId });
       const lifetimeIn = allEntries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
       const lifetimeOut = allEntries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
       const cashInHand = lifetimeIn - lifetimeOut;
 
       // Today's entries
-      const todayStart = new Date(now);
-      todayStart.setHours(0, 0, 0, 0);
       const todayEntries = allEntries.filter((e) => new Date(e.date) >= todayStart);
       const todayCashIn = todayEntries.filter((e) => e.type === 'in').reduce((s, e) => s + e.amount, 0);
       const todayCashOut = todayEntries.filter((e) => e.type === 'out').reduce((s, e) => s + e.amount, 0);
