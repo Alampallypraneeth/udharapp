@@ -6,6 +6,7 @@ import Header from '../components/Layout/Header';
 import Modal from '../components/Common/Modal';
 import Loader from '../components/Common/Loader';
 import ConfirmDialog from '../components/Common/ConfirmDialog';
+import SmsModal from '../components/Common/SmsModal';
 import { useLanguage } from '../context/LanguageContext';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -87,6 +88,7 @@ const CustomerDetailPage = () => {
   const [customer, setCustomer] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [smsModalOpen, setSmsModalOpen] = useState(false);
 
   // Voice Entry configuration
   const speechLang = lang === 'hi' ? 'hi-IN' : lang === 'te' ? 'te-IN' : 'en-IN';
@@ -241,6 +243,21 @@ const CustomerDetailPage = () => {
     const upiUri = `upi://pay?pa=${user.upiId}&pn=${encodeURIComponent(user.storeName || 'Merchant')}&am=${qrAmount}&cu=INR&tn=${encodeURIComponent(`Payment for ${customer.name}`)}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(upiUri)}`;
     window.open(qrUrl, '_blank');
+  };
+
+  const handleSendWhatsAppReminder = () => {
+    if (!customer) return;
+    const storeName = user?.storeName || 'KhataPay';
+    const cleanPhone = (customer.phone || '').replace(/\D/g, '');
+    const formattedPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+    const baseUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? (import.meta.env.VITE_FRONTEND_URL || 'https://udharapp.vercel.app')
+      : window.location.origin;
+    const paymentLink = `${baseUrl}/pay/${customer._id}`;
+    const message = `Namaste ${customer.name}! Friendly reminder from ${storeName}. Your pending due amount is ₹${customer.balance}. Please clear it soon. Pay online here: ${paymentLink} - Thank you!`;
+    const waUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+    toast.success(`WhatsApp reminder opened for ${customer.name}!`);
   };
 
   const fetchData = async () => {
@@ -558,6 +575,29 @@ const CustomerDetailPage = () => {
                 <HiOutlineDocumentDownload size={14} /> Download PDF
               </button>
             </div>
+
+            {/* Direct Remind buttons when customer has pending dues */}
+            {customer.balance > 0 && (
+              <div className="flex gap-2 w-full pt-1">
+                <button
+                  type="button"
+                  onClick={handleSendWhatsAppReminder}
+                  className="flex-1 py-2.5 bg-[#2EAF7D] hover:bg-[#238C62] text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shadow-[#2EAF7D]/20"
+                  title="Send WhatsApp Reminder"
+                >
+                  <FaWhatsapp size={15} /> WhatsApp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSmsModalOpen(true)}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shadow-indigo-600/20"
+                  title="Send SMS Reminder"
+                >
+                  <FaSms size={15} /> Send SMS
+                </button>
+              </div>
+            )}
+
             <button className="w-full py-2.5 bg-transparent hover:bg-orange/5 text-orange border border-orange/30 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer" onClick={openEditCustomerModal}>
               <HiOutlinePencil size={14} /> Edit Customer Profile
             </button>
@@ -1270,6 +1310,14 @@ const CustomerDetailPage = () => {
           </div>
         </div>
       )}
+
+      {/* SMS Reminder Modal */}
+      <SmsModal
+        isOpen={smsModalOpen}
+        onClose={() => setSmsModalOpen(false)}
+        customer={customer}
+        storeName={user?.storeName || 'KhataPay'}
+      />
     </>
   );
 };

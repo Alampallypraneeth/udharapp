@@ -1158,12 +1158,116 @@ app.post('/api/reminders/checkout/:customerId/confirm-payment', async (req, res)
   }
 });
 
-app.post('/api/reminders/send-whatsapp', authGuard, (req, res) => {
-  res.json({ success: true, message: 'WhatsApp reminder intent generated' });
+app.post('/api/reminders/send-whatsapp', authGuard, async (req, res) => {
+  try {
+    const customerId = req.body.customerId || req.params.customerId;
+    const storeName = req.user?.storeName || 'KhataPay';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://udharapp.vercel.app';
+    
+    let customer = null;
+    if (mongoose.connection.readyState === 1) {
+      customer = await Customer.findOne({ _id: customerId, owner: req.user._id });
+    }
+    if (!customer) {
+      customer = memoryStore.customers.find(c => c._id.toString() === customerId && c.owner.toString() === req.user._id.toString());
+    }
+    
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const cleanPhone = (customer.phone || '').replace(/\D/g, '');
+    const formattedPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+    const paymentLink = `${frontendUrl}/pay/${customer._id}`;
+    const message = req.body.customMessage || `Namaste ${customer.name}! Friendly reminder from ${storeName}. Your pending due amount is ₹${customer.balance}. Please clear it soon. Pay online here: ${paymentLink} - Thank you!`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+
+    res.json({
+      success: true,
+      message: `WhatsApp reminder prepared for ${customer.name}`,
+      whatsappUrl,
+      customerName: customer.name,
+      phone: customer.phone,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-app.post('/api/reminders/send-sms', authGuard, (req, res) => {
-  res.json({ success: true, message: 'SMS reminder intent generated' });
+app.post('/api/reminders/send-sms', authGuard, async (req, res) => {
+  try {
+    const customerId = req.body.customerId || req.params.customerId;
+    const storeName = req.user?.storeName || 'KhataPay';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://udharapp.vercel.app';
+    
+    let customer = null;
+    if (mongoose.connection.readyState === 1) {
+      customer = await Customer.findOne({ _id: customerId, owner: req.user._id });
+    }
+    if (!customer) {
+      customer = memoryStore.customers.find(c => c._id.toString() === customerId && c.owner.toString() === req.user._id.toString());
+    }
+    
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+
+    const cleanPhone = (customer.phone || '').replace(/\D/g, '');
+    const phone10 = cleanPhone.slice(-10);
+    const paymentLink = `${frontendUrl}/pay/${customer._id}`;
+    const message = req.body.customMessage || `Namaste ${customer.name}, you have a pending payment of ₹${Number(customer.balance).toFixed(2)} at ${storeName}. Please clear it soon. Pay online: ${paymentLink} - Thank you!`;
+
+    // Attempt Fast2SMS Cloud API
+    const apiKey = process.env.FAST2SMS_API_KEY || 'qiHLwsP9XaxUTheY1k86WuMnBoRC5ObytIvdZA3zJKj74mQDp0GfYAuKPoDm0R9wTC7kSegL2NaOxJVE';
+    let gatewaySuccess = false;
+    let gatewayResponse = null;
+
+    if (apiKey && phone10.length === 10) {
+      try {
+        const f2sRes = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
+          route: 'q',
+          message: message,
+          language: 'english',
+          flash: 0,
+          numbers: phone10,
+        }, {
+          headers: {
+            'authorization': apiKey,
+            'Content-Type': 'application/json',
+          },
+          timeout: 6000,
+        });
+
+        if (f2sRes.data && f2sRes.data.return === true) {
+          gatewaySuccess = true;
+          gatewayResponse = f2sRes.data;
+        } else {
+          gatewayResponse = f2sRes.data;
+        }
+      } catch (err) {
+        gatewayResponse = err.response?.data || { message: err.message };
+      }
+    }
+
+    const smsUri = `sms:${phone10}?body=${encodeURIComponent(message)}`;
+
+    res.json({
+      success: true,
+      gatewaySuccess,
+      message: gatewaySuccess 
+        ? `SMS sent via Fast2SMS to ${customer.name}!` 
+        : `SMS reminder ready for ${customer.name}`,
+      gatewayResponse,
+      smsData: {
+        to: phone10,
+        customerName: customer.name,
+        message,
+        smsUri,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
 export default app;

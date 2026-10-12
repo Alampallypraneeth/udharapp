@@ -13,6 +13,7 @@ import { HiOutlinePlus, HiOutlineSearch, HiOutlineTrash, HiOutlineMicrophone, Hi
 import { FaWhatsapp, FaSms, FaMobileAlt, FaPhone } from 'react-icons/fa';
 import { useSpeechToText } from '../hooks/useSpeechToText';
 import DueBadge from '../components/Common/DueBadge';
+import SmsModal from '../components/Common/SmsModal';
 import { exportAllCustomersCSV } from '../utils/exportCsv';
 import { playPaymentSuccessChime } from '../utils/soundbox';
 
@@ -78,6 +79,7 @@ const CustomersPage = () => {
   const { user } = useContext(AuthContext);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [smsCustomer, setSmsCustomer] = useState(null);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -384,6 +386,16 @@ const CustomersPage = () => {
                       >
                         <HiOutlineArrowDown size={11} /> You Got
                       </button>
+
+                      {c.balance > 0 && (
+                        <button
+                          title="Send SMS Reminder"
+                          onClick={(e) => { e.stopPropagation(); setSmsCustomer(c); }}
+                          className="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg cursor-pointer flex items-center justify-center border border-indigo-200/60 transition-colors"
+                        >
+                          <FaSms size={13} />
+                        </button>
+                      )}
 
                       <button 
                         className="p-1.5 text-slate-gray hover:text-red-give hover:bg-red-give/10 rounded-lg cursor-pointer flex items-center justify-center border-none bg-transparent transition-colors" 
@@ -711,6 +723,14 @@ const CustomersPage = () => {
           </div>
         </div>
       )}
+
+      {/* SMS Reminder Modal */}
+      <SmsModal
+        isOpen={!!smsCustomer}
+        onClose={() => setSmsCustomer(null)}
+        customer={smsCustomer}
+        storeName={user?.storeName || 'KhataPay'}
+      />
     </>
   );
 };

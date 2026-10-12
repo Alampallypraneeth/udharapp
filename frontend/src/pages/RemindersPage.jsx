@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import API from '../api/axios';
 import Header from '../components/Layout/Header';
 import Loader from '../components/Common/Loader';
+import SmsModal from '../components/Common/SmsModal';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../hooks/useAuth';
 import { toast } from 'react-toastify';
@@ -14,6 +15,7 @@ const RemindersPage = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState({});
+  const [smsCustomer, setSmsCustomer] = useState(null);
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -126,6 +128,15 @@ const RemindersPage = () => {
                         )}
                         WhatsApp
                       </button>
+
+                      <button 
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-pure-white text-xs font-bold rounded-lg border-none cursor-pointer transition-all shadow-2xs hover:shadow-xs" 
+                        title="Send SMS Reminder" 
+                        onClick={() => setSmsCustomer(c)}
+                      >
+                        <FaSms size={13} />
+                        SMS
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -134,6 +145,14 @@ const RemindersPage = () => {
           </table>
         </div>
       )}
+
+      {/* SMS Reminder Interactive Modal */}
+      <SmsModal 
+        isOpen={!!smsCustomer} 
+        onClose={() => setSmsCustomer(null)} 
+        customer={smsCustomer} 
+        storeName={user?.storeName || 'KhataPay'} 
+      />
     </>
   );
 };

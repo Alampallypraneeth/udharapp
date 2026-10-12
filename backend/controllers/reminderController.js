@@ -29,14 +29,31 @@ const sendFast2SMSSMS = async (req, res, next) => {
 
     const storeName = req.user.storeName || 'KhataPay';
     const frontendUrl = process.env.FRONTEND_URL || 'https://udharapp.vercel.app';
-    const message = `Namaste ${customer.name}, you have a pending payment of ₹${customer.balance.toFixed(2)} at ${storeName}. Please clear it soon. Pay at: ${frontendUrl}/pay/${customer._id}`;
+    const message = req.body.customMessage || `Namaste ${customer.name}, you have a pending payment of ₹${customer.balance.toFixed(2)} at ${storeName}. Please clear it soon. Pay at: ${frontendUrl}/pay/${customer._id}`;
 
-    const result = await sendSMS(customer.phone, message);
+    let result = null;
+    let gatewaySuccess = false;
+    try {
+      result = await sendSMS(customer.phone, message);
+      gatewaySuccess = result && result.success;
+    } catch (e) {
+      result = { error: e.message };
+    }
+
+    const cleanPhone = (customer.phone || '').replace(/\D/g, '').slice(-10);
+    const smsUri = `sms:${cleanPhone}?body=${encodeURIComponent(message)}`;
 
     res.status(200).json({
       success: true,
-      message: `SMS reminder sent successfully to ${customer.name}!`,
+      gatewaySuccess,
+      message: gatewaySuccess ? `SMS reminder sent successfully to ${customer.name}!` : `SMS reminder ready for ${customer.name}`,
       data: result,
+      smsData: {
+        to: cleanPhone,
+        customerName: customer.name,
+        message,
+        smsUri,
+      }
     });
   } catch (error) {
     next(error);
