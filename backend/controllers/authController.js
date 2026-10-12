@@ -5,7 +5,7 @@ const { sendEmail } = require('../services/mailService');
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'udhaar_khata_super_secret_key_2026', { expiresIn: '30d' });
 };
 
 // @desc    Register a new store owner

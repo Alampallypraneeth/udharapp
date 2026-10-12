@@ -102,7 +102,14 @@ const RegisterPage = () => {
       await register(form);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      const errMsg =
+        err.response?.data?.message ||
+        (err.code === 'ECONNABORTED'
+          ? 'Backend server request timed out. Please check if your Render backend service is awake and running.'
+          : err.message === 'Network Error'
+          ? 'Network error: Unable to reach backend server. Please verify your connection or Render service.'
+          : 'Registration failed');
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
